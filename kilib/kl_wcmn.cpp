@@ -264,8 +264,17 @@ bool kiSUtil::getFolderDlg( char* buf, HWND par, const char* title, const char* 
 		return true;
 	}
 
-	//-- SHBrowseForFolder が 無かった 環境 (Win32s) は 自前の ダイアログ で 代替
-	NOAHTRACE( "[browse] SHBrowseForFolder unavailable, using built-in dialog" );
+	//-- NULL では 「ダイアログが無い」 と 「ユーザーがキャンセルした」 の
+	//   区別が つかない。Win32s 以外 では ダイアログは 存在するので、
+	//   NULL は キャンセル と 見て 終わる。
+	if( app()->osver().dwPlatformId!=VER_PLATFORM_WIN32s )
+	{
+		NOAHTRACE( "[browse] SHBrowseForFolder returned NULL, treating as cancel" );
+		return false;
+	}
+
+	//-- 本当に ダイアログが 無い 環境 (Win32s) なら 自前の ものを 使う
+	NOAHTRACE( "[browse] no shell folder browser on this platform, using built-in dialog" );
 	return kiSUtil_folderDlg( buf, par, title, def );
 }
 
