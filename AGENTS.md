@@ -62,6 +62,12 @@ MSVC 4.x (tested: cl 10.10 / Visual C++ 4.1) also builds via `msvc4.mak` — see
   (`NMAKE /f msvc4.mak clean` to wipe). Binaries land in `bin-msvc4/`, objects in
   `tmp\msvc4/`. Single Release (`NDEBUG`) config; no PCH, no IDE project (`.dsp` is
   VC6 format — MSDEV4 cannot read it).
+- **Run NMAKE from a local drive, never from a UNC path.** This repo's own working copy is
+  `\\Roy-xp\c\devel\noah`. `CMD.EXE` cannot use a UNC share as its cwd, so every recipe command
+  runs in the wrong directory; because the `-del`/`cl`/`rc` prefixes ignore errors, `clean`
+  deletes nothing and a rebuild is a no-op that still reports success. Use
+  `pushd \\Roy-xp\c\devel\noah` (maps a temp drive) before invoking NMAKE. This bit once
+  here: it produced a convincing "build succeeded" that left stale binaries in place.
 - `msvc4.h` supplies what MSVC 4.x lacks (`bool`/`true`/`false`, `explicit`, `ICON_*`,
   `LVITEM`/`LVCOLUMN`/`NMLISTVIEW` aliases). It must stay included **after** system
   headers and **before** kilib headers (this SDK's own `oaidl.h` uses `bool` as a
@@ -72,6 +78,35 @@ MSVC 4.x (tested: cl 10.10 / Visual C++ 4.1) also builds via `msvc4.mak` — see
   bases in local classes, no `if (T x = …)` condition-declarations, no top-level
   `const` on overriding parameters, and no `PBS_SMOOTH` symbol in `.rc` (guarded with
   `#ifndef` in `Noah.rc`).
+
+#### `msvc4.mak` is **not** a Win32s build — it cannot be one
+
+Verified, so nobody has to re-derive it: VC4 produces Win95/NT Win32 binaries, which are a
+different target from Win32s (Windows 3.1 + Win32s, the 32-bit-in-16-bit-address-space subset).
+
+- **No Win32s link target exists in VC4.** `link /?` offers only
+  `/SUBSYSTEM:{NATIVE|WINDOWS|CONSOLE|POSIX}`, and `C:\MSDEV4` contains no `w32s*.lib` and no
+  Win32s CRT. (`WIN32SPL.LIB` is the Windows Splicer — unrelated.) Win32s binaries need the
+  separate **Win32s SDK** import libraries plus a Win32s build of the CRT; `/MT` links the VC4
+  static CRT, which has no Win32s edition. A "successful" link would still be unloadable.
+- **Noah imports DLLs Win32s does not ship.** `dumpbin /IMPORTS` on `bin-msvc4\Noah.exe`:
+  `ADVAPI32`, `COMCTL32`, `KERNEL32`, `LZ32`, `ole32`, `SHELL32`, `USER32`, `VERSION`.
+  - `COMCTL32` — 41 `PropSheet*` refs, toolbars, and the `IDD_ARCVIEW` list view.
+  - `ole32` — `OleInitialize` (`kilib/kl_app.h:67`), `DoDragDrop` (`kilib/kl_dnd.cpp:16`),
+    `CoCreateInstance`/`IShellLink` (`kilib/kl_wcmn.cpp:92`), 24 `IDataObject` sites. OLE DnD
+    *is* the product: it is how files reach Noah.
+  - `ADVAPI32` — the entire settings store (`CNoahConfigManager`) and `NoahXt.dll`.
+  - `SHELL32` — `SHBrowseForFolder`, `SHGetSpecialFolderLocation`, `ShellExecute`.
+- **The archiver backends are Win95 DLLs.** Every `CArc*` except built-in `CArcMsc`/`CArcCpt`
+  loads `Unlha32.dll`, `7-zip32.dll`, `Cab32.dll`, … which will not load under Win32s either.
+- Win32s constraints: one 32-bit process at a time, ~16MB address space, no threads (we spawn
+  none), 2-second file-time granularity, and 32-bit processes must be launched from a 16-bit
+  app via `WinExec()`.
+
+So a genuine Win32s port is a UI-layer rewrite (plain dialogs, no property sheets/listview/
+toolbar, command-line or `WinExec` entry instead of OLE drop, `WritePrivateProfileString`
+instead of the registry), not a build-flag change. The compression/extraction engine survives;
+almost none of the front-end does. Treat it as out of scope unless someone asks for it.
 
 ### Linker / startup quirks — do not "fix" these
 
@@ -229,12 +264,30 @@ appends it to `PATH`.
    (`IDD_WINCFG`), a bitmap/icon in `NoahXt/icon/` + `NoahXt.rc` if it needs an overlay icon,
    and wire it in `CNoahConfigDialog::CWinXPage`.
 
-`Noah.rc` carries **two copies of most dialogs**: a Japanese block (`LANG_JAPANESE`,
+`Noah.rc` carries **two copies of most resources**: a Japanese block (`LANG_JAPANESE`,
 `AFX_TARG_JPN`) and an English block (`LANG_ENGLISH`, `AFX_TARG_ENU`). Windows loads
-whichever matches the thread locale, so a control added to only one copy silently
+whichever matches the thread locale, so anything added to only one copy silently
 vanishes on systems using the other language. When editing any dialog template
-(`IDD_ARCVIEW` et al), update **both** copies. Known drift: the English `IDD_ARCVIEW`
-once lacked `IDC_STATUSBAR` entirely.
+(`IDD_ARCVIEW` et al), update **both** copies.
+
+This is worse than a cosmetic gap for anything a *dialog* is built from. Two real bugs
+came out of it:
+
+- The English `IDD_ARCVIEW` once lacked `IDC_STATUSBAR` entirely.
+- `IDD_INFCFG` (the `CInfoPage` settings page), `IDD_PROGRESS`, `IDD_PASSWORD`, and the
+  `IDI_MAIN` / `IDI_B2E` / `IDR_ACCEL` resources existed **only in the Japanese block**.
+  A missing page template makes `CreatePropertySheetPage` fail, which fails the *whole*
+  `PropertySheet()`, so on any English-locale system Noah started, showed no settings
+  dialog, and exited silently. It looked like a platform bug (it reproduced on Win32s
+  but not on a Japanese Win95/NT) and was not — `/MT` vs `/MD` was irrelevant because no
+  module was ever loaded.
+
+The failure is invisible by construction: `kiPropSheet::begin()` discards `PropertySheet()`'s
+return value (`kilib/kl_wnd.cpp`), and `CNoahConfigManager::dialog()` only pumps messages
+`if( dlg.isAlive() )`, and `isAlive()` reads the HWND that the `HCBT_CREATEWND` hook would
+have set — so a failed sheet produces no window, no error dialog, and no exit code.
+When a dialog does not appear at all, check `FindResourceEx` for that ID in *both*
+languages before suspecting the platform.
 
 ---
 
