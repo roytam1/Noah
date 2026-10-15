@@ -30,6 +30,14 @@ public:
 	static bool exist( const char* fname );
 	static bool isdir( const char* fname );
 
+	// フォルダ選択ダイアログ。uninst/NoahXt は ルートの Resource.h を
+	// 読まないので、kilib 側に置いて 値も ここに 固定する。
+	// Resource.h にも 同じ 値 を 置いて ある (RC 用)。
+	#define IDD_FOLDER    124
+	#define IDC_FLIST     1061
+	#define IDC_FPATH     1062
+	#define IDC_FDRIVE    1063
+
 	// カレントディレクトリを安全なところに移してLoadLibrary
 	static HMODULE loadLibrary(LPCTSTR lpFileName)
 	{
@@ -37,7 +45,13 @@ public:
 		::GetCurrentDirectory(MAX_PATH, original_cur);
 		::GetSystemDirectory(sys, MAX_PATH);
 		::SetCurrentDirectory(sys);
+
+		// 任意 DLL は 無かった 場合も 正常?行なので、Windows 3.1 / Win32s の
+		// 「ファイルが見つかりません」システムダイアログを 抑止する。
+		UINT oldErrMode = ::SetErrorMode( SEM_NOOPENFILEERRORBOX );
 		HMODULE han = ::LoadLibrary(lpFileName);
+		::SetErrorMode( oldErrMode );
+
 		::SetCurrentDirectory(original_cur);
 		return han;
 	}

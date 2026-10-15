@@ -3,6 +3,11 @@
 
 #include "stdafx.h"
 #include "kilib.h"
+#ifdef NOAH_TRACE
+#include "../noah_trace.h"
+#else
+#define NOAHTRACE(args) ((void)0)
+#endif
 
 
 //-------- Windowを作成時に HWND に kiWindow* をセットするための処理 -------//
@@ -14,7 +19,9 @@ kiWindow* kiWindow::st_pCurInit = NULL;
 void kiWindow::init()
 {
 	// CreateWindow 用フック設置
+	NOAHTRACE( "[hook] SetWindowsHookEx(WH_CBT) tid=%lu", (unsigned long)::GetCurrentThreadId() );
 	st_hHook = ::SetWindowsHookEx( WH_CBT, &CBTProc, NULL, ::GetCurrentThreadId() );
+	NOAHTRACE( "[hook] result=%p err=%lu", (void*)st_hHook, (unsigned long)::GetLastError() );
 }
 
 void kiWindow::finish()
@@ -27,6 +34,7 @@ LRESULT CALLBACK kiWindow::CBTProc( int code, WPARAM wp, LPARAM lp )
 {
 	if( code == HCBT_CREATEWND )
 	{
+		NOAHTRACE( "[cbt] CREATEWND hwnd=%p pending=%p", (void*)wp, (void*)st_pCurInit );
 		if( st_pCurInit )
 		{
 			// k.i.lib のウインドウが CreateWindow された場合
@@ -79,6 +87,7 @@ void kiWindow::msgLoop( msglooptype type )
 		}
 		::TranslateMessage( &msg ), ::DispatchMessage( &msg );
 	}
+	NOAHTRACE( "[loop] exited: loopbreaker=%d", loopbreaker ? 1 : 0 );
 	loopbreaker = false;
 }
 
@@ -262,7 +271,13 @@ void kiPropSheet::begin()
 	m_Header.nPages = l;
 
 	st_CurInitPS = this;
-	PropertySheet( &m_Header );
+	NOAHTRACE( "[sheet] pages=%d flags=%lx inst=%p ppsp=%p",
+		l, (unsigned long)m_Header.dwFlags, m_Header.hInstance, (void*)ppsp );
+	{
+		int sheet = PropertySheet( &m_Header );
+		NOAHTRACE( "[sheet] PropertySheet()=%d err=%lu", sheet, (unsigned long)::GetLastError() );
+	}
+	NOAHTRACE( "[sheet] this=%p hwnd=%p", (void*)this, (void*)hwnd() );
 	delete [] ppsp;
 }
 
@@ -308,6 +323,11 @@ LRESULT CALLBACK kiPropSheet::main_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPAR
 	LRESULT result = ::CallWindowProc( ptr->m_DefProc, dlg, msg, wp, lp );
 
 	// ×ボタンはキャンセル扱い
+	if( msg==WM_DESTROY || msg==WM_CLOSE || msg==WM_SYSCOMMAND
+	 || (msg==WM_COMMAND && (LOWORD(wp)==IDCANCEL || LOWORD(wp)==IDOK)) )
+		NOAHTRACE( "[sheet-msg] *** msg=0x%lX wParam=0x%lX lParam=0x%lX",
+			(unsigned long)msg, (unsigned long)wp, (unsigned long)lp );
+
 	if( msg==WM_SYSCOMMAND && wp==SC_CLOSE )
 		::PostMessage( dlg, WM_COMMAND, IDCANCEL, 0 );
 
@@ -359,6 +379,7 @@ struct DLGTEMPLATEEX
 
 int CALLBACK kiPropSheet::main_initProc( HWND dlg, UINT msg, LPARAM lp )
 {
+	NOAHTRACE( "[sheet-cb] msg=%lu lp=%p", (unsigned long)msg, (void*)lp );
 	if( msg == PSCB_PRECREATE )
 	{
 		// スタイルを指すDWORDのアドレスを取得
@@ -390,8 +411,15 @@ int CALLBACK kiPropSheet::main_initProc( HWND dlg, UINT msg, LPARAM lp )
 BOOL kiPropSheet::page_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 {
 	kiPropSheetPage* ptr = (kiPropSheetPage*)::GetWindowLong( dlg, GWL_USERDATA );
+	// Only the messages that decide whether the page came up at all; logging
+	// every one would produce a log large enough to matter on a 16MB box.
+	if( msg==WM_INITDIALOG || msg==WM_DESTROY )
+		NOAHTRACE( "[page-msg] msg=%lu dlg=%p userdata=%p", (unsigned long)msg, (void*)dlg, (void*)ptr );
 	if( !ptr )
+	{
+		NOAHTRACE( "[page-msg] *** userdata NULL - WH_CBT never captured this window ***" );
 		return FALSE;
+	}
 
 	// ここで、共通処理
 	switch( msg )
@@ -431,6 +459,7 @@ BOOL kiPropSheet::page_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 
 UINT CALLBACK kiPropSheet::page_initProc( HWND dlg, UINT msg, LPPROPSHEETPAGE ppsp )
 {
+	NOAHTRACE( "[page-cb] msg=%lu lParam=%p", (unsigned long)msg, (ppsp)?(void*)ppsp->lParam:(void*)0 );
 	if( msg == PSPCB_CREATE )
 		preCreate( (kiWindow*)(ppsp->lParam) );
 	return TRUE;

@@ -5,7 +5,8 @@
 #define AFX_KIAPP_H__AC24C8AF_2187_4873_83E8_AB4F2325017B__INCLUDED_
 
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
-// 汎用アプリケーションクラス
+/*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
+//汎用アプリケーションクラス
 
 class kiApp
 {
@@ -49,7 +50,10 @@ public: //-- 外向きインターフェイス --------------------------
 	// シェルのアロケータでメモリ解放
 	void shellFree( void* ptr ) const
 		{
-			m_pShellAlloc->Free( ptr );
+			// NULL アロケータを 決して 解参照しない。SHGetMalloc() は Win32s では
+			// 失敗 し、shell 由来の PIDLIST を 解放 した瞬間に プロセスが 落ちる。
+			if( m_pShellAlloc && ptr )
+				m_pShellAlloc->Free( ptr );
 		}
 
 	// 仮想コード vKey のキーは押されているか？
@@ -63,8 +67,10 @@ public: //-- 外向きインターフェイス --------------------------
 		{
 			if( !m_bShellInit )
 			{
+				NOAHTRACE( "[shell] InitCommonControls" );
 				::InitCommonControls();
-				::OleInitialize( NULL );
+				HRESULT hro = ::OleInitialize( NULL );
+				NOAHTRACE( "[shell] OleInitialize=0x%08lX", (unsigned long)hro );
 				m_bShellInit = true;
 			}
 		}
@@ -97,14 +103,25 @@ protected: //-- 内部処理 -----------------------------------
 			m_bShellInit = false;
 			m_OsVer.dwOSVersionInfoSize = sizeof( m_OsVer );
 			::GetVersionEx( &m_OsVer );
-			::SHGetMalloc( &m_pShellAlloc );
+		NOAHTRACE( "[osver] plat=%lu ver=%lu.%lu build=%lu csd=%s",
+			(unsigned long)m_OsVer.dwPlatformId,
+			(unsigned long)m_OsVer.dwMajorVersion, (unsigned long)m_OsVer.dwMinorVersion,
+			(unsigned long)m_OsVer.dwBuildNumber, m_OsVer.szCSDVersion );
+			// Win32s 1.30 does not implement SHGetMalloc(): it fails and leaves the
+		// out-parameter NULL. Everything keeps working; only shellFree() has to
+		// cope with a null allocator, which it now does.
+		m_pShellAlloc = NULL;
+		HRESULT hrMalloc = ::SHGetMalloc( &m_pShellAlloc );
+		NOAHTRACE( "[app] SHGetMalloc hr=0x%08lX -> %p",
+			(unsigned long)hrMalloc, (void*)m_pShellAlloc );
 		}
 
 protected:
 
 	virtual ~kiApp()
 		{
-			m_pShellAlloc->Release();
+			if( m_pShellAlloc )
+				m_pShellAlloc->Release();
 			if( m_bShellInit )
 				::OleUninitialize();
 		}
