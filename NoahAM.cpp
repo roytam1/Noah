@@ -19,6 +19,7 @@
 void CNoahArchiverManager::init()
 {
 	const char* kl = mycnf().kill();
+	NOAHTRACE( "[arc.init] kill string = %s", kl ? kl : "(null)" );
 	static int dead[128];
 	while( *kl ) dead[ 0x7f & (*(kl++)) ] = 1;
 
@@ -40,10 +41,13 @@ void CNoahArchiverManager::init()
 	if( !dead['c'] )	m_AList.add( new CArcCpt );
 	// XacRett は専用エンジンがある形式を受け持たないので最後に置く
 	if( !dead['X'] )	m_AList.add( new CArcXacRett );
+	NOAHTRACE( "[arc.init] %d archivers registered", m_AList.len() );
 
 	// 拡張スクリプトロード
 	char prev_cur[MAX_PATH];
 	::GetCurrentDirectory(MAX_PATH, prev_cur);
+	NOAHTRACE( "[arc.init] cwd = %s", prev_cur );
+	NOAHTRACE( "[arc.init] b2e dir = %s", CArcB2e::init_b2e_path() );
 	::SetCurrentDirectory( CArcB2e::init_b2e_path() );
 	kiFindFile find;
 	find.begin( "*.b2e" );
@@ -51,7 +55,9 @@ void CNoahArchiverManager::init()
 	for( int t=0; find.next(&fd); t++ )
 		m_AList.add( new CArcB2e(fd.cFileName) );
 	m_b2e = (t>1);
+	NOAHTRACE( "[arc.init] b2e scan done, %d found", t );
 	::SetCurrentDirectory(prev_cur);
+	NOAHTRACE( "[arc.init] end" );
 }
 
 //----------------------------------------------//
@@ -335,8 +341,10 @@ void CNoahArchiverManager::do_melting( kiPath& destdir )
 	const bool rmn = mycnf().mnonum(); // Remove NuMber ?
 
 	//-- 出力先
+	NOAHTRACE( "[melt] destdir in = \"%s\"", (const char*)destdir );
 	destdir.beBackSlash( true );
 	destdir.mkdir(), destdir.beShortPath();
+	NOAHTRACE( "[melt] destdir out = \"%s\"", (const char*)destdir );
 
 	for( unsigned int i=0; i!=m_FName.len(); i++ )
 		if( m_Melters[i] )
@@ -377,6 +385,8 @@ void CNoahArchiverManager::do_melting( kiPath& destdir )
 				m_FName[i].cAlternateFileName[0]==0 ? m_FName[i].cFileName : m_FName[i].cAlternateFileName,
 				m_FName[i].cFileName );
 			int result = m_Melters[i]->melt( an, ddir );
+			NOAHTRACE( "[melt] %s -> \"%s\" result=0x%lX", m_FName[i].cFileName,
+				(const char*)ddir, (unsigned long)result );
 			if( result<0x8000 )
 			{
 				if( mk==2 ) // ２重フォルダ防止処理(弱)

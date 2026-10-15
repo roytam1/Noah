@@ -28,10 +28,12 @@ private: //-- ダイアログとしての処理
 		{
 			char str[MAX_PATH];
 			sendMsgToItem( IDC_DDIR, WM_GETTEXT, MAX_PATH, (LPARAM)str );
+			NOAHTRACE( "[setdir] typed \"%s\"", str );
 			m_ddir = str;
 			m_ddir.beBackSlash( true );
 			m_ddir.mkdir();
 			m_ddir.beShortPath();
+			NOAHTRACE( "[setdir] final \"%s\"", (const char*)m_ddir );
 		}
 	bool setSelection()
 		{

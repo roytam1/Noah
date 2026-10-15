@@ -204,8 +204,20 @@ void CArcViewDlg::resize()
 bool CArcViewDlg::onOK()
 {
 	setdir();
-	m_pArc->melt( m_fname, m_ddir );
-	myapp().open_folder( m_ddir, 1 );
+	NOAHTRACE( "[view] Extract All -> \"%s\"", (const char*)m_ddir );
+	int r = m_pArc->melt( m_fname, m_ddir );
+	NOAHTRACE( "[view] melt returned 0x%lX", (unsigned long)r );
+	if( 0x8000<=r && r!=0x8020 )
+	{
+		// –Ù‚Á‚Ä I‚í‚Á‚Ä‚¢‚½Bdo_melting ‚Æ“¯‚¶‚­  reason ‚ð Œ©‚¹‚é
+		char str[255];
+		::wsprintf( str, "%s\nError No: [%x]",
+			(const char*)kiStr().loadRsrc( IDS_M_ERROR ), r );
+		app()->msgBox( str );
+		return false;
+	}
+	if( r<0x8000 )
+		myapp().open_folder( m_ddir, 1 );
 	kiSUtil::switchCurDirToExeDir(); // ”O‚Ì‚½‚ß
 	return onCancel();
 }

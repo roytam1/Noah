@@ -5,6 +5,12 @@
 #include "resource.h"
 #include "NoahApp.h"
 #include "NoahCM.h"
+#ifdef NOAH_TRACE
+#include "noah_trace.h"
+#else
+#define NOAHTRACE(args) ((void)0)
+#endif
+
 
 //----------------------------------------------//
 //---------- INIファイル名の設定など -----------//
@@ -29,6 +35,7 @@ void CNoahConfigManager::init()
 	}
 
 	//-- 設定読み込み済みフラグをクリア
+	NOAHTRACE( "[cnf.init] caldix/PATH block done" );
 	m_Loaded = 0;
 
 	//-- iniファイル名設定
@@ -37,10 +44,13 @@ void CNoahConfigManager::init()
 	if( !::GetUserName( usr, &siz ) )
 		ki_strcpy( usr, "Default" );
 	m_Ini.setFileName( "Noah.ini" );
+	NOAHTRACE( "[cnf.init] GetUserName -> %s", usr );
 	m_Ini.setSection( usr );
 
 	//-- 解凍用設定は全部ロードしておく
+	NOAHTRACE( "[cnf.init] load(Melt) ..." );
 	load( Melt );
+	NOAHTRACE( "[cnf.init] done" );
 }
 
 //----------------------------------------------//
@@ -168,11 +178,18 @@ void CNoahConfigManager::dialog()
 {
 	CNoahConfigDialog dlg;
 	dlg.createModeless( NULL );
+	NOAHTRACE( "[cfg] after createModeless hwnd=%p", (void*)dlg.hwnd() );
 
 	app()->setMainWnd( &dlg );
 
 	if( dlg.isAlive() )
+	{
+		NOAHTRACE( "[cfg] entering message loop" );
 		kiWindow::msgLoop();
+		NOAHTRACE( "[cfg] message loop returned" );
+	}
+	else
+		NOAHTRACE( "[cfg] NOT alive - no message loop, dialog never shown" );
 }
 
 FARPROC CNoahConfigManager::getProc( const char* name )
@@ -226,8 +243,10 @@ CNoahConfigDialog::CNoahConfigDialog()
 BOOL CNoahConfigDialog::onInit()
 {
 	//-- DnD ON, 前面へ
+	NOAHTRACE( "[cfg] onInit hwnd=%p", (void*)hwnd() );
 	::DragAcceptFiles( hwnd(), TRUE );
 	setFront( hwnd() );
+	NOAHTRACE( "[cfg] onInit done" );
 	return FALSE;
 }
 
@@ -297,6 +316,7 @@ void CNoahConfigDialog::shift_and_button()
 
 bool CNoahConfigDialog::onOK()
 {
+	NOAHTRACE( "[cfg] onOK entered" );
 	onApply();
 	::PostQuitMessage( 0 );
 	return true;
@@ -310,6 +330,7 @@ void CNoahConfigDialog::onApply()
 
 bool CNoahConfigDialog::onCancel()
 {
+	NOAHTRACE( "[cfg] onCancel entered" );
 	sendOK2All();
 	::ShowWindow( hwnd(), SW_HIDE );
 	shift_and_button();
