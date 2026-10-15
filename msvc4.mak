@@ -5,6 +5,14 @@
 #   NMAKE /f msvc4.mak
 #   NMAKE /f msvc4.mak clean
 #
+# IMPORTANT: run this from a LOCAL drive, not a UNC path. CMD.EXE cannot use a
+#   UNC share as its working directory; it prints "cannot use UNC path as
+#   current directory" and falls back, so every recipe command silently runs in
+#   the wrong directory. Because the -del / cl / rc prefixes ignore errors,
+#   `clean` appears to succeed while deleting nothing and a rebuild is a no-op
+#   that still reports success. If the repo lives on \\server\share, enter it
+#   with  pushd \\server\share\noah  (which maps a temporary drive) first.
+#
 # Output: bin-msvc4\Noah.exe, bin-msvc4\NoahXt.dll, bin-msvc4\uninst.exe
 # Objects: tmp\msvc4\ (mirrors the source layout, so that stdafx.obj and
 #   uninst\StdAfx.obj do not collide on case-insensitive filesystems).
@@ -15,7 +23,7 @@
 CC      = cl
 RC      = rc
 LINK    = link
-CFLAGS  = /nologo /W3 /O2 /DWIN32 /DNDEBUG /D_WINDOWS /D_MBCS /MT /DSTRICT /I.
+CFLAGS  = /nologo /W3 /O2 /DWIN32 /DNDEBUG /D_WINDOWS /D_MBCS /ML /DSTRICT /I.
 RCFLAGS = /l 0x411 /d NDEBUG
 LFLAGS  = /nologo /entry:kilib_startUp /subsystem:windows
 LIBS    = kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib \
@@ -23,6 +31,15 @@ LIBS    = kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib \
           odbc32.lib odbccp32.lib comctl32.lib lz32.lib version.lib
 OBJDIR  = tmp\msvc4
 OUTDIR  = bin-msvc4
+
+# NMAKE /f msvc4.mak TRACE=1 builds an instrumented Noah.exe that appends every
+# step of the window-creation chain to NoahTrace.log next to the exe. Use it
+# when a dialog does not appear at all; the log names the API call that failed.
+!IFDEF TRACE
+CFLAGS  = $(CFLAGS) /DNOAH_TRACE
+OBJDIR  = $(OBJDIR)-trace
+OUTDIR  = bin-msvc4-trace
+!ENDIF
 
 NOAH_OBJS = \
 	$(OBJDIR)\stdafx.obj \

@@ -4,6 +4,11 @@
 #ifndef AFX_KILIB_H__89998F34_A9FE_4A27_A159_671F85AA9383__INCLUDED_
 #define AFX_KILIB_H__89998F34_A9FE_4A27_A159_671F85AA9383__INCLUDED_
 
+#ifdef NOAH_TRACE
+#include "../noah_trace.h"
+#else
+#define NOAHTRACE(args) ((void)0)
+#endif
 #include "kl_str.h"
 #include "kl_misc.h"
 #include "kl_cmd.h"

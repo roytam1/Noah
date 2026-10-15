@@ -17,3 +17,4 @@ Debug/
 *.exp
 *.lib
 bin-msvc4/
+bin-msvc4-trace/
