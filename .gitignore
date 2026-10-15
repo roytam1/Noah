@@ -1,0 +1,18 @@
+# XacRett DLL sources (reference only, fetched separately)
+XacRett-dll-src-0.49.17/
+
+# VC6 / VC2010 build output
+obj/
+tmp/
+Release/
+Debug/
+*.ncb
+*.opt
+*.plg
+*.obj
+*.pch
+*.idb
+*.pdb
+*.ilk
+*.exp
+*.lib

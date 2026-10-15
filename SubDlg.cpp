@@ -145,7 +145,60 @@ BOOL CArcViewDlg::onInit()
 			::EnableWindow( item(items[i]), FALSE );
 	}
 
+	//-- リサイズ用の数値を実測しておく
+	measure();
+
 	return FALSE;
+}
+
+//----------------------------------------------//
+//--------------- リサイズ処理 -------------------//
+//----------------------------------------------//
+
+void CArcViewDlg::measure()
+{
+	RECT rc;
+	POINT pt[2];
+
+	::GetClientRect( hwnd(), &rc );
+	m_nMinW = rc.right, m_nMinH = rc.bottom;
+
+	// 一覧の上端・下端( クライアント座標 )
+	::GetWindowRect( item(IDC_FILELIST), &rc );
+	pt[0].x = rc.left, pt[0].y = rc.top;
+	pt[1].x = rc.right, pt[1].y = rc.bottom;
+	::MapWindowPoints( NULL, hwnd(), pt, 2 );
+	m_nListTop = pt[0].y;
+	const int nListBottom = pt[1].y;
+
+	// ステータスバーの上端・高さ( クライアント座標 )
+	::GetWindowRect( item(IDC_STATUSBAR), &rc );
+	pt[0].x = rc.left, pt[0].y = rc.top;
+	pt[1].x = rc.right, pt[1].y = rc.bottom;
+	::MapWindowPoints( NULL, hwnd(), pt, 2 );
+	m_nListGap = pt[0].y - nListBottom;
+	m_nSBarH   = pt[1].y - pt[0].y;
+
+	m_bSized = true;
+	resize();
+}
+
+void CArcViewDlg::resize()
+{
+	RECT rc;
+	::GetClientRect( hwnd(), &rc );
+
+	// ステータスバーは下端いっぱい
+	::SetWindowPos( item(IDC_STATUSBAR), NULL,
+		0, rc.bottom - m_nSBarH, rc.right, m_nSBarH,
+		SWP_NOZORDER|SWP_NOOWNERZORDER );
+
+	// 一覧は上部の操作群とステータスバーの間で伸縮する
+	::SetWindowPos( item(IDC_FILELIST), NULL,
+		0, m_nListTop,
+		rc.right,
+		rc.bottom - m_nSBarH - m_nListGap - m_nListTop,
+		SWP_NOZORDER|SWP_NOOWNERZORDER );
 }
 
 bool CArcViewDlg::onOK()
@@ -255,35 +308,21 @@ BOOL CALLBACK CArcViewDlg::proc( UINT msg, WPARAM wp, LPARAM lp )
 
 	//-- リサイズ関連の処理 ---------------------
 	case WM_GETMINMAXINFO:
+		if( m_bSized )
 		{
-			RECT self,child;
-			::GetWindowRect( hwnd(), &self );
-			::GetWindowRect( item(IDC_REF), &child );
-			POINT& sz = ((MINMAXINFO*)lp)->ptMinTrackSize;
-			sz.x = child.right - self.left + 18;
-			sz.y = child.bottom - self.top + 100;
+			// クライアントサイズ指定なので、枠とタイトルバーの分も足す
+			RECT win,cli;
+			::GetWindowRect( hwnd(), &win );
+			::GetClientRect( hwnd(), &cli );
+			MINMAXINFO* mm = (MINMAXINFO*)lp;
+			mm->ptMinTrackSize.x = m_nMinW  + (win.right-win.left)  -(cli.right-cli.left);
+			mm->ptMinTrackSize.y = m_nMinH  + (win.bottom-win.top)  -(cli.bottom-cli.top);
 		}
-		return TRUE;
+		break;
 	case WM_SIZE:
-		if( wp!=SIZE_MAXHIDE && wp!=SIZE_MINIMIZED )
-		{
-			RECT self,ref,child,sbar;
-			::GetWindowRect( hwnd(), &self );
-			::GetWindowRect( item(IDC_REF), &ref );
-			::GetWindowRect( item(IDC_FILELIST), &child );
-			::GetClientRect( item(IDC_STATUSBAR), &sbar );
-
-			::SetWindowPos( item(IDC_FILELIST), NULL, 0, 0,
-				LOWORD(lp),
-				(self.bottom-ref.bottom)-(child.top-ref.bottom)
-				-(sbar.bottom-sbar.top)-10,
-				SWP_NOMOVE|SWP_NOOWNERZORDER|SWP_NOZORDER );
-
-			::GetClientRect( hwnd(), &self );
-			::SetWindowPos( item(IDC_STATUSBAR), NULL, sbar.left,
-				self.bottom - (sbar.bottom-sbar.top),
-				0, 0, SWP_NOSIZE|SWP_NOOWNERZORDER|SWP_NOZORDER );
-		}
+		// 最小化中は何もしない
+		if( m_bSized && wp!=SIZE_MAXHIDE && wp!=SIZE_MINIMIZED )
+			resize();
 		break;
 
 	case WM_NOTIFY:

@@ -10,7 +10,9 @@ class CArcViewDlg : public kiDialog, kiDataObject
 public:
 	CArcViewDlg( CArchiver* ptr,arcname& fnm,const kiPath& ddir )
 		: kiDialog( IDD_ARCVIEW ), m_pArc( ptr ),
-		m_fname( fnm ), m_ddir( ddir )
+		m_fname( fnm ), m_ddir( ddir ),
+		m_nMinW(0), m_nMinH(0), m_nListTop(0),
+		m_nSBarH(0), m_nListGap(0), m_bSized(false)
 		{
 			AddRef();
 			myapp().get_tempdir( m_tdir );
@@ -45,6 +47,20 @@ private: //-- ダイアログとしての処理
 		}
 	int hlp_cnt_check();
 	bool m_bAble;
+
+private: //-- リサイズ処理 -----------------------
+
+	// onInit の最後で、現在の( リソース上の )レイアウトを実測して控えておく。
+	// 以降のリサイズでは画面座標や決め打ちの数値は使わず、
+	// この時の数値だけで計算する。
+	void measure();
+	void resize();
+
+	int  m_nMinW, m_nMinH;  //-- 最小サイズ( リソース上のクライアントサイズ )
+	int  m_nListTop;        //-- 一覧の上端( クライアント座標 )
+	int  m_nSBarH;          //-- 下端の表示欄の高さ
+	int  m_nListGap;        //-- 一覧の下端と表示欄の隙間
+	bool m_bSized;          //-- 上記を測り終えたか( WM_INITDIALOG 前は false )
 
 private: //-- ドラッグ＆ドロップ処理
 

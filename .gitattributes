@@ -1,0 +1,4 @@
+# Blobs are stored with LF; the working tree (VC6 / VS2010 / Japanese editors)
+# expects CRLF. Without this git compares raw bytes and every touched file shows
+# up as a whole-file rewrite.
+* text=auto eol=crlf

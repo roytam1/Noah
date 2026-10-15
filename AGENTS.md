@@ -166,12 +166,38 @@ DLL/console driven, declared in `ArcDLL.h` — each is a thin subclass of `CArcD
 | `CArcYz1`    | `Yz1.dll`     | yz1 |
 | `CArcGca`    | `UnGCA32.dll` | gca |
 | `CArcAce`    | `UnAceV2.dll` (via `unacedef.h`) | ace |
+| `CArcXacRett`| `XacRett.dll` (melt only) | see below |
 | `CArcMsc`    | built-in LZSS (`MSCompress`) | `??_` |
 | `CArcCpt`    | built-in CompactPro/LZH-RLE decoder | cpt bin |
 | `CArcB2e`    | `*.b2e` Rythp scripts + external exe | script-defined |
 
 These DLLs are **not** in the repo; they are resolved from `PATH` at runtime. `CArcModule`
 falls back to treating an unresolvable name as a shell command or `.exe`/`.com`.
+
+To point Noah at an out-of-tree DLL folder without touching `PATH`, drop a `caldix.ini`
+next to `Noah.exe` containing `[conf]` / `dll=<folder>` — `CNoahConfigManager::init()`
+appends it to `PATH`.
+
+### `CArcXacRett` (ArcXacRett.cpp) — the odd one out
+
+`XacRett.dll` is a single DLL covering ~70 formats. Three things differ from `CArcDLL`:
+
+- **Melt-only.** `XacRettQueryFunctionList` returns `FALSE` for `ISARC_ADD`; there is no
+  compressor. `v_load()` therefore returns `aCheck|aMelt|aList|aMeltEach` and never
+  `set_cmp_ext`/`add_cmp_mhd`, so it never appears in the compression method list.
+- **It does not claim formats Noah already has a dedicated engine for** (lzh, zip, 7z, rar,
+  cab, tar/gz/bz2/xz/lzma, arj, yz1, gca, ace, cpt, bin, gza, bza). Those stay with their
+  own classes. Everything else is dispatched by content via `v_check`. It is registered
+  **last** in `CNoahArchiverManager::init()` so the dedicated archivers also win the
+  content-check fallback in `map_melters`.
+- **Its command line has no verb.** `CSplitCmdLine::Split` unconditionally discards the
+  first token, so `v_melt` emits a throwaway `Noah` token to keep it out of the way. The
+  destination token **must** end in `\` or `IsBaseDir` rejects it and the path is silently
+  treated as a wildcard (extraction then writes nothing) — hence `dir.beBackSlash(true)`.
+  Selected members are passed as trailing wildcard arguments. `-n1` suppresses XacRett's
+  own progress window, which would otherwise block on its own message loop.
+
+  Verified command shape: `Noah -n1 "<archive>" "<dest>\" ["<member>"]`
 
 ### Adding a new archiver
 
@@ -184,6 +210,13 @@ falls back to treating an unresolvable name as a shell command or `.exe`/`.com`.
 4. If it appears in the config UI: add an `IDC_*` in `Resource.h`, the checkbox in `Noah.rc`
    (`IDD_WINCFG`), a bitmap/icon in `NoahXt/icon/` + `NoahXt.rc` if it needs an overlay icon,
    and wire it in `CNoahConfigDialog::CWinXPage`.
+
+`Noah.rc` carries **two copies of most dialogs**: a Japanese block (`LANG_JAPANESE`,
+`AFX_TARG_JPN`) and an English block (`LANG_ENGLISH`, `AFX_TARG_ENU`). Windows loads
+whichever matches the thread locale, so a control added to only one copy silently
+vanishes on systems using the other language. When editing any dialog template
+(`IDD_ARCVIEW` et al), update **both** copies. Known drift: the English `IDD_ARCVIEW`
+once lacked `IDC_STATUSBAR` entirely.
 
 ---
 
