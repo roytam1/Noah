@@ -37,6 +37,7 @@ Notes:
 ## 2. Build
 
 Toolchain targets **MSVC 6.0** (primary, per `ReadMe.txt`) and **MSVC 2010 Express** (ported).
+MSVC 4.x (tested: cl 10.10 / Visual C++ 4.1) also builds via `msvc4.mak` — see below.
 
 | Project | Output | VS6 project | VS2010 project |
 |---|---|---|---|
@@ -54,6 +55,23 @@ Toolchain targets **MSVC 6.0** (primary, per `ReadMe.txt`) and **MSVC 2010 Expre
   inspection.
 - There are **no tests, no linters, no CI**. Verification is: it compiles, and manual smoke
   test (drag files onto the exe; run with no args to get the config dialog).
+
+### MSVC 4.x (`msvc4.mak`)
+
+- Prerequisites: `C:\MSDEV4\BIN\VCVARS32.BAT x86`, then `NMAKE /f msvc4.mak`
+  (`NMAKE /f msvc4.mak clean` to wipe). Binaries land in `bin-msvc4/`, objects in
+  `tmp\msvc4/`. Single Release (`NDEBUG`) config; no PCH, no IDE project (`.dsp` is
+  VC6 format — MSDEV4 cannot read it).
+- `msvc4.h` supplies what MSVC 4.x lacks (`bool`/`true`/`false`, `explicit`, `ICON_*`,
+  `LVITEM`/`LVCOLUMN`/`NMLISTVIEW` aliases). It must stay included **after** system
+  headers and **before** kilib headers (this SDK's own `oaidl.h` uses `bool` as a
+  parameter name, so it cannot go first or on the command line). Inert on VC6+.
+- The makefile builds with `STRICT` defined (fixes `DLGPROC`/`HOOKPROC` typing); do not
+  rely on non-`STRICT` callback conversions.
+- Code constraints for MSVC4 (not required by VC6): no member-function definitions or
+  bases in local classes, no `if (T x = …)` condition-declarations, no top-level
+  `const` on overriding parameters, and no `PBS_SMOOTH` symbol in `.rc` (guarded with
+  `#ifndef` in `Noah.rc`).
 
 ### Linker / startup quirks — do not "fix" these
 

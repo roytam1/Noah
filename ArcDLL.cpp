@@ -44,8 +44,8 @@ int CArcDLL::v_melt( const arcname& aname, const kiPath& ddir, const aflArray* f
 int  CArcDLL::v_compress( const kiPath&	  base,
 						  const wfdArray& files,
 						  const kiPath&   ddir,
-						  const int       method,
-						  const bool      sfx )
+						  int       method,
+						  bool      sfx )
 {
 	// Šî’ê‚ÍƒJƒŒƒ“ƒg
 	::SetCurrentDirectory( base );

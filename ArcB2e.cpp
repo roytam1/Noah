@@ -839,9 +839,7 @@ void CArcB2e::CB2eCore::resp( bool needq, const char* opt, const CharArray& a, c
 	}
 }
 
-void CArcB2e::CB2eCore::input( const char* msg, const char* defval, kiVar* r )
-{
-	struct CB2eInputDlg : public kiDialog
+struct CB2eInputDlg : public kiDialog
 	{
 		const char* msg;
 		const char* def;
@@ -870,6 +868,8 @@ void CArcB2e::CB2eCore::input( const char* msg, const char* defval, kiVar* r )
 			}
 	};
 
+void CArcB2e::CB2eCore::input( const char* msg, const char* defval, kiVar* r )
+{
 	CB2eInputDlg d( msg, defval, r );
 	d.doModal( app()->mainhwnd() );
 }

@@ -131,7 +131,7 @@ void CArcModule::ver( kiStr& str )
 	char *verstr="----", buf[200];
 	if( m_dll )
 	{
-		if( WORD ver=m_dll->getVer() )
+		WORD ver=m_dll->getVer(); if( ver )
 		{
 			WORD sub=m_dll->getVerSub();
 			::wsprintf( verstr=buf, "%d.%02d%c", ver/100, ver%100, (sub<100)?0:sub/100+'a'-1 );
@@ -183,8 +183,10 @@ int CArcModule::cnt( const kiPath& aname, kiPath& dname, const char* wild )
 {
 	int ans = aUnknown;
 
+	HANDLE h = NULL;
 	if( m_dll )
-		if( HANDLE h = m_dll->openArc( app()->mainhwnd(), aname, M_CHECK_FILENAME_ONLY|M_ERROR_MESSAGE_OFF ) )
+		h = m_dll->openArc( app()->mainhwnd(), aname, M_CHECK_FILENAME_ONLY|M_ERROR_MESSAGE_OFF );
+	if( h )
 		{
 			INDIVIDUALINFO inf1st, inf;
 			if( 0==m_dll->findfirst( h, wild, &inf1st ) )

@@ -16,3 +16,4 @@ Debug/
 *.ilk
 *.exp
 *.lib
+bin-msvc4/

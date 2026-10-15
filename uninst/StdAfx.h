@@ -12,5 +12,6 @@
 #undef  _WIN32_IE
 #define _WIN32_IE 0x0200
 #include <shlobj.h>
+#include "../msvc4.h"
 
 #endif

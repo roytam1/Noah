@@ -104,13 +104,15 @@ void CNoahApp::do_cmdline( bool directcall )
 	do_files( m_pCmd->param(), &m_pCmd->option(), !directcall );
 }
 
+struct local {
+	~local() {kiSUtil::switchCurDirToExeDir(); } // ディレクトリロックしないように
+};
+
 void CNoahApp::do_files( const cCharArray& files,
 						 const cCharArray* opts,
 						 bool  basicaly_ignore )
 {
-	struct local {
-		~local() {kiSUtil::switchCurDirToExeDir(); } // ディレクトリロックしないように
-	} _;
+	local _;
 
 	//-- Archiver Manager にファイル名リストを記憶する
 	if( 0 == m_arcMan.set_files( files ) )

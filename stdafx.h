@@ -13,6 +13,7 @@
 
 // shell header
 #include <shlobj.h>
+#include "msvc4.h"
 
 // k.i.lib
 #include "kilib/kilibext.h"

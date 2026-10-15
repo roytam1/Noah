@@ -14,6 +14,7 @@
 #include <windowsx.h>
 #include <shlobj.h>
 #include <lmaccess.h>
+#include "../msvc4.h"
 
 // カレントディレクトリを安全なところに移してLoadLibrary
 static HMODULE safepathLoadLibrary(LPCTSTR lpFileName)
