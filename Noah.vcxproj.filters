@@ -49,6 +49,9 @@
     <ClCompile Include="ArcMsc.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="ArcXacRett.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="NoahAM.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -109,6 +112,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="ArcMsc.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ArcXacRett.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Noah.h">

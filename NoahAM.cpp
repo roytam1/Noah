@@ -10,6 +10,7 @@
 #include "ArcMsc.h"
 #include "ArcB2e.h"
 #include "ArcCpt.h"
+#include "ArcXacRett.h"
 
 //----------------------------------------------//
 //------ 実働部隊のデータで初期化しておく ------//
@@ -37,6 +38,8 @@ void CNoahArchiverManager::init()
 	if( !dead['a'] )	m_AList.add( new CArcAce );
 	if( !dead['M'] )	m_AList.add( new CArcMsc );
 	if( !dead['c'] )	m_AList.add( new CArcCpt );
+	// XacRett は専用エンジンがある形式を受け持たないので最後に置く
+	if( !dead['X'] )	m_AList.add( new CArcXacRett );
 
 	// 拡張スクリプトロード
 	char prev_cur[MAX_PATH];

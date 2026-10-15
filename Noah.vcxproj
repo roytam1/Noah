@@ -108,6 +108,7 @@
     <ClCompile Include="ArcDLL.cpp" />
     <ClCompile Include="Archiver.cpp" />
     <ClCompile Include="ArcMsc.cpp" />
+    <ClCompile Include="ArcXacRett.cpp" />
     <ClCompile Include="kilib\kl_app.cpp" />
     <ClCompile Include="kilib\kl_carc.cpp" />
     <ClCompile Include="kilib\kl_cmd.cpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="ArcDLL.h" />
     <ClInclude Include="Archiver.h" />
     <ClInclude Include="ArcMsc.h" />
+    <ClInclude Include="ArcXacRett.h" />
     <ClInclude Include="kilib\kilib.h" />
     <ClInclude Include="kilib\kilibext.h" />
     <ClInclude Include="kilib\kl_app.h" />

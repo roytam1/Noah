@@ -118,6 +118,10 @@ SOURCE=.\ArcMsc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ArcXacRett.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Noah.cpp
 # End Source File
 # Begin Source File
@@ -164,6 +168,10 @@ SOURCE=.\Archiver.h
 # Begin Source File
 
 SOURCE=.\ArcMsc.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ArcXacRett.h
 # End Source File
 # Begin Source File
 
