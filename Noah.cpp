@@ -119,7 +119,7 @@ void CNoahApp::do_files( const cCharArray& files,
 	//-- çÏã∆ópïœêî
 	enum { unknown, melt, compress }
 			whattodo = unknown;
-	bool	ctrl_mlt = keyPushed( VK_CONTROL );
+	bool	ctrl_mlt = !keyPushed( VK_CONTROL );
 	bool	ctrl_cmp = ctrl_mlt;
 	bool	alt      = keyPushed( VK_MENU ) || keyPushed( VK_RWIN ) || keyPushed( VK_LWIN );
 	const char *cmptype=NULL, *method=NULL;
