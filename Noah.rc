@@ -275,6 +275,20 @@ BEGIN
     PUSHBUTTON      "íÜíf",IDCANCEL,150,76,50,14
 END
 
+IDD_FOLDER DIALOG DISCARDABLE  0, 0, 227, 138
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ï€ë∂êÊÉtÉHÉãÉ_ÇÃëIë"
+FONT 9, "ÇlÇr ÇoÉSÉVÉbÉN"
+BEGIN
+    LTEXT           "Current folder:",IDC_STATIC,7,7,60,8
+    COMBOBOX        IDC_FDRIVE,70,4,45,80,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "",IDC_FPATH,120,7,100,8
+    LISTBOX         IDC_FLIST,7,20,213,74,LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,120,120,50,14
+    PUSHBUTTON      "ÉLÉÉÉìÉZÉã",IDCANCEL,177,120,50,14
+END
 IDD_PATHCHECK DIALOG DISCARDABLE  0, 0, 298, 69
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Noah åxçê"
@@ -572,6 +586,20 @@ BEGIN
     PUSHBUTTON      "Abort",IDCANCEL,150,76,50,14
 END
 
+IDD_FOLDER DIALOG DISCARDABLE  0, 0, 227, 138
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Choose a destination folder"
+FONT 9, "MS Sans Serif"
+BEGIN
+    LTEXT           "Current folder:",IDC_STATIC,7,7,60,8
+    COMBOBOX        IDC_FDRIVE,70,4,45,80,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "",IDC_FPATH,120,7,100,8
+    LISTBOX         IDC_FLIST,7,20,213,74,LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,120,120,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,177,120,50,14
+END
 IDD_PATHCHECK DIALOG DISCARDABLE  0, 0, 298, 69
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Noah Warning"
@@ -583,6 +611,44 @@ BEGIN
     LTEXT           "",IDC_PATHNAME,16,17,275,23
     PUSHBUTTON      "Yes to &All",ID_ALLYES,165,48,50,14
     PUSHBUTTON      "&Cancel",ID_ALLNO,241,48,50,14
+END
+
+IDD_INFCFG DIALOG DISCARDABLE  0, 0, 219, 97
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 9, "Courier New"
+BEGIN
+    ICON            IDI_MAIN,IDC_STATIC,28,21,20,20,SS_REALSIZEIMAGE
+    CTEXT           "Noah 3.199\n\npresented by k.inaba",IDC_STATIC,13,45,53,
+                    36,WS_TABSTOP
+    EDITTEXT        IDC_VERSION,78,7,134,83,ES_MULTILINE | ES_AUTOHSCROLL | 
+                    ES_READONLY | WS_VSCROLL
+END
+
+IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 214, 43
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Extracting..."
+FONT 9, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "STOP",IDCANCEL,157,7,50,14
+    CONTROL         "Progress1",IDC_BAR,"msctls_progress32",PBS_SMOOTH | 
+                    WS_BORDER,7,25,200,12
+    LTEXT           "",IDC_FNAME,7,7,142,11
+END
+
+IDD_PASSWORD DIALOG DISCARDABLE  0, 0, 206, 64
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Noah"
+FONT 9, "MS Sans Serif"
+BEGIN
+    LTEXT           "Input your password:",IDC_MESSAGE,4,5,196,20
+    EDITTEXT        IDC_EDIT,7,29,194,12,ES_AUTOHSCROLL
+    CONTROL         "Mask",IDC_MASK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,
+                    47,31,10
+    PUSHBUTTON      "OK",IDOK,96,46,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,149,46,50,12
 END
 
 
@@ -642,6 +708,28 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "noah.ico"
+IDI_B2E                 ICON    DISCARDABLE     "b2e.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCEL ACCELERATORS DISCARDABLE 
+BEGIN
+    "F",            IDA_MYDIR,              VIRTKEY, CONTROL, NOINVERT
+    VK_F1,          IDA_HELP,               VIRTKEY, NOINVERT
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

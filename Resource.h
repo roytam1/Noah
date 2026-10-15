@@ -29,6 +29,11 @@
 #define IDD_ANYASS                      123
 #define IDR_DEFAULT1                    124
 #define IDD_PATHCHECK                   126
+// ’l‚Í kilib/kl_wcmn.h ‚Æ •K‚¸ ‘µ‚¦‚é‚±‚Æ (RC ‚Í kilib ‚ð “Ç‚ß‚È‚¢)
+#define IDD_FOLDER                      124
+#define IDC_FLIST                       1061
+#define IDC_FPATH                       1062
+#define IDC_FDRIVE                      1063
 #define IDC_FILELIST                    1000
 #define IDC_MELTEACH                    1001
 #define IDC_SHOW                        1002
@@ -88,7 +93,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        127
 #define _APS_NEXT_COMMAND_VALUE         40003
-#define _APS_NEXT_CONTROL_VALUE         1062
+#define _APS_NEXT_CONTROL_VALUE         1064
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
