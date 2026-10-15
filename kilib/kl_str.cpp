@@ -204,10 +204,25 @@ void kiPath::beSpecialPath( int nPATH )
 			*m_pBuf = '\0';
 
 			LPITEMIDLIST il;
-			if( NOERROR!=::SHGetSpecialFolderLocation( NULL, nPATH, &il ) )
+			NOAHTRACE( "[path] CSIDL %d ...", (int)nPATH );
+			HRESULT hr = ::SHGetSpecialFolderLocation( NULL, nPATH, &il );
+			NOAHTRACE( "[path]   SHGetSpecialFolderLocation -> 0x%08lX il=%p",
+				(unsigned long)hr, (void*)il );
+			if( NOERROR!=hr )
 				return;
 			::SHGetPathFromIDList( il, m_pBuf );
+			NOAHTRACE( "[path]   SHGetPathFromIDList -> \"%s\"", m_pBuf );
+
+			//-- シェルが 何も 返さない 環境 (Win32s) では CSIDL_DESKTOP などが
+			//   空文字 になる。空文字 の ままだと 解凍先 などが 決まらないので、
+			//   シェルを 介さない 候補 に フォールバックする。
+			if( *m_pBuf=='\0' )
+			{
+				::GetCurrentDirectory( m_ALen, m_pBuf );
+				NOAHTRACE( "[path]   shell gave nothing, falling back to cwd \"%s\"", m_pBuf );
+			}
 			app()->shellFree( il );
+			NOAHTRACE( "[path]   shellFree done" );
 		}
 	}
 }
@@ -257,9 +272,18 @@ bool kiPath::isInSameDir(const char* q) const
 
 void kiPath::beShortPath()
 {
-	::GetShortPathName( m_pBuf, m_pBuf, m_ALen );
+	// 入力と 出力に 同じ バッファを 使うのは だめ。MSDN が 明言している。
+	// Win32s では これが 失敗 して、8.3 化 されない 長いパスが そのまま
+	// 残って 出力先に なり、抽出が 失敗する。戻り値も 捨てて いた。
+	kiStr before( m_pBuf );
+	char sp[MAX_PATH];
+	DWORD r = ::GetShortPathName( m_pBuf, sp, sizeof(sp) );
+	if( r )
+		ki_strcpy( m_pBuf, sp );
+	NOAHTRACE( "[short] \"%s\" -> \"%s\" (ret=%lu err=%lu)",
+		(const char*)before, m_pBuf,
+		(unsigned long)r, (unsigned long)::GetLastError() );
 }
-
 void kiPath::mkdir()
 {
 	for( char *p=m_pBuf; *p; p=kiStr::next(p) )
@@ -268,7 +292,10 @@ void kiPath::mkdir()
 			continue;
 		*p = '\0';
 		if( !kiSUtil::exist(m_pBuf) )
-			if( ::CreateDirectory( m_pBuf, NULL ) )
+			if( !::CreateDirectory( m_pBuf, NULL ) )
+				NOAHTRACE( "[mkdir] CreateDirectory(\"%s\") failed err=%lu",
+					m_pBuf, (unsigned long)::GetLastError() );
+			else
 				::SHChangeNotify( SHCNE_MKDIR,SHCNF_PATH,(const void*)m_pBuf,NULL );
 		*p = '\\';
 	}
@@ -276,6 +303,13 @@ void kiPath::mkdir()
 
 void kiPath::remove()
 {
+	//-- 保険。空文字やドライブルートを渡すとカレントドライブが消える。
+	//   GetFileAttributes("") が失敗しない環境 (Win32s) では下の
+	//   FindFirstFile("\*") がカレントドライブのルートに解決され、
+	//   中身を全て削除してしまう。ここを素通りしてはいけない。
+	if( *this=='\0' )
+		return;
+
 	if( !kiSUtil::exist(*this) )
 		return;
 	if( !kiSUtil::isdir(*this) )
@@ -287,6 +321,11 @@ void kiPath::remove()
 	// buf == filename with no last '\\'
 	kiPath buf(*this);
 	buf.beBackSlash(false);
+
+	// "C:" や "/" のような ルート指定も 拒否する
+	if( (buf[1]==':' && buf[2]=='\0')
+	 || (buf[0]=='/' && buf[1]=='\0') )
+		return;
 
 	kiPath tmp(buf);
 	WIN32_FIND_DATA fd;

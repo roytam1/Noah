@@ -46,19 +46,26 @@ void kilib_create_new_app()
 void CNoahApp::run( kiCmdParser& cmd )
 {
 	//-- 初期化
+	NOAHTRACE( "[run] begin" );
 	m_cnfMan.init();
+	NOAHTRACE( "[run] cnfMan.init() returned" );
 	m_arcMan.init();
+	NOAHTRACE( "[run] arcMan.init() returned" );
 
 	//-- コマンドラインパラメータ保持
 	m_pCmd = &cmd;
+	NOAHTRACE( "[run] files=%d shift=%d", cmd.param().len(), keyPushed(VK_SHIFT) ? 1 : 0 );
 
 	//-- 「ファイル名が渡されてない or Shift押し起動」なら設定画面表示
 	if( cmd.param().len()==0 || keyPushed(VK_SHIFT) )
 	{
 		//-- Load-INI ( 全部 )
+		NOAHTRACE( "[run] load(All) ..." );
 		m_cnfMan.load( All );
+		NOAHTRACE( "[run] load(All) returned" );
 		//-- 設定画面表示
 		m_cnfMan.dialog();
+		NOAHTRACE( "[run] dialog() returned" );
 	}
 	else
 	{
@@ -67,7 +74,15 @@ void CNoahApp::run( kiCmdParser& cmd )
 	}
 
 	//-- 終了処理
-	m_tmpDir.remove();
+	//-- get_tempdir() が一度も呼ばれていなければ m_tmpDir は空文字のままなので、
+	//   remove() するとカレントドライブ全体が削除される。作った場合だけ消す。
+	if( m_tmpDir.len()!=0 )
+	{
+		NOAHTRACE( "[run] removing temp dir \"%s\"", (const char*)m_tmpDir );
+		m_tmpDir.remove();
+	}
+	else
+		NOAHTRACE( "[run] no temp dir was created - nothing to remove" );
 }
 
 //----------------------------------------------//
@@ -206,6 +221,9 @@ void CNoahApp::do_files( const cCharArray& files,
 	if( whattodo == melt )
 	{
 		//-- 解凍設定は既にm_cnfMan.init()でロードされている…
+		NOAHTRACE( "[files] whattodo=melt mdirsm=%d mdir=\"%s\" basepath=\"%s\"",
+			mycnf().mdirsm() ? 1 : 0, (const char*)mycnf().mdir(),
+			(const char*)m_arcMan.get_basepath() );
 
 		if( destdir.len()==0 )
 		{
@@ -218,6 +236,7 @@ void CNoahApp::do_files( const cCharArray& files,
 		}
 
 		//-- 解凍
+		NOAHTRACE( "[files] melt destdir=\"%s\" ctrl_mlt=%d", (const char*)destdir, ctrl_mlt ? 1 : 0 );
 		if( ctrl_mlt )	m_arcMan.do_listing( destdir );
 		else {
 			ProcessNumLimitZone zone( mycnf().multiboot_limit(), "LimitterForNoahAtKmonosNet" );
