@@ -26,6 +26,10 @@ public:
 	// 自分へのショートカット作成
 	static void createShortCut( const kiPath& at, const char* name );
 
+	//-- SHGetFileInfoA を 動的に 引く。古い シェル には 無い (あるいは 名前が 違う) ことが
+	//   あり、 静的に import すると バイナリごと 起動できなくなる。無い 場合は NULL を 返す。
+	static HIMAGELIST getFileInfo( const char* path, SHFILEINFO* fi, UINT flags );
+
 	// ファイルが存在する？
 	static bool exist( const char* fname );
 	static bool isdir( const char* fname );

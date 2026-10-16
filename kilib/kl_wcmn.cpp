@@ -290,6 +290,32 @@ void kiSUtil::getFolderDlgOfEditBox( HWND wnd, HWND par, const char* title )
 		::SendMessage( wnd, WM_SETTEXT, 0, (LPARAM)str );
 }
 
+//-- SHGetFileInfoA は 環境によって 無い / 名前が 違う。動的に 引く。
+typedef HIMAGELIST (WINAPI *pSHGetFileInfo)( LPCSTR, DWORD, SHFILEINFO*, UINT, HINSTANCE );
+
+HIMAGELIST kiSUtil::getFileInfo( const char* path, SHFILEINFO* fi, UINT flags )
+{
+	static pSHGetFileInfo pfn = NULL;
+	static bool tried = false;
+
+	if( !tried )
+	{
+		tried = true;
+		HMODULE h = loadLibrary( "shell32" );
+		if( h )
+		{
+			pfn = (pSHGetFileInfo)::GetProcAddress( h, "SHGetFileInfoA" );
+			if( !pfn )	// 16bit 由来の シェル は A/W 接尾辞なし かも
+				pfn = (pSHGetFileInfo)::GetProcAddress( h, "SHGetFileInfo" );
+		}
+		NOAHTRACE( "[icon] SHGetFileInfo resolved = %p", (void*)pfn );
+	}
+
+	if( !pfn )
+		return NULL;
+	return pfn( path, 0, fi, flags, NULL );
+}
+
 int kiSUtil::getSysIcon( const char* ext )
 {
 	kiPath tmp( kiPath::Tmp );
@@ -297,8 +323,9 @@ int kiSUtil::getSysIcon( const char* ext )
 	tmp += ext;
 
 	SHFILEINFO fi;
-	::SHGetFileInfo( tmp, 0, &fi, sizeof(fi), 
-		SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX );
+	ki_memzero( &fi, sizeof(fi) );		// 失敗した とき iIcon を 読まない
+	if( !getFileInfo( tmp, &fi, SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX ) )
+		return 0;
 	return fi.iIcon;
 }
 

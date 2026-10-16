@@ -26,10 +26,15 @@ BOOL CArcViewDlg::onInit()
 
 	//-- アイコン
 	path = m_fname.basedir, path += m_fname.sname;
-	hImS = (HIMAGELIST)::SHGetFileInfo( path, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_ICON | SHGFI_SMALLICON );
-	hImL = (HIMAGELIST)::SHGetFileInfo( path, 0, &lfi, sizeof(lfi), SHGFI_SYSICONINDEX | SHGFI_ICON | SHGFI_LARGEICON );
-	sendMsg( WM_SETICON, ICON_BIG,   (LPARAM)lfi.hIcon );
-	sendMsg( WM_SETICON, ICON_SMALL, (LPARAM)sfi.hIcon );
+	ki_memzero( &sfi, sizeof(sfi) );
+	ki_memzero( &lfi, sizeof(lfi) );
+	hImS = kiSUtil::getFileInfo( path, &sfi, SHGFI_SYSICONINDEX | SHGFI_ICON | SHGFI_SMALLICON );
+	hImL = kiSUtil::getFileInfo( path, &lfi, SHGFI_SYSICONINDEX | SHGFI_ICON | SHGFI_LARGEICON );
+	NOAHTRACE( "[icon] archive icon s=%p l=%p", (void*)hImS, (void*)hImL );
+	if( lfi.hIcon )
+		sendMsg( WM_SETICON, ICON_BIG,   (LPARAM)lfi.hIcon );
+	if( sfi.hIcon )
+		sendMsg( WM_SETICON, ICON_SMALL, (LPARAM)sfi.hIcon );
 
 	//-- タイトル
 	sendMsg( WM_SETTEXT, 0, (LPARAM)kiPath(m_fname.lname).name() );
