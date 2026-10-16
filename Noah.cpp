@@ -310,15 +310,32 @@ void CNoahApp::get_tempdir( kiPath& tmp )
 
 	if( m_tmpDir.len()==0 )
 	{
-		::GetTempFileName( kiPath( kiPath::Tmp ), "noa", 0, buf );
-		::DeleteFile( buf );
-		m_tmpDir = buf;
+		if( ::GetTempFileName( kiPath( kiPath::Tmp ), "noa", 0, buf ) )
+			::DeleteFile( buf );
+		else
+		{
+			//-- 失敗した とき buf は 未初期化 で、失敗した あと mkdir()/remove()
+			//   に 渡すと 任意の ディレクトリを 壊す。PID から 自前で 名付ける。
+			NOAHTRACE( "[tmp] GetTempFileName failed, deriving from pid err=%lu",
+				(unsigned long)::GetLastError() );
+			char nm[32];
+			::wsprintf( nm, "\\noa%08lX.TMP\\", (unsigned long)::GetCurrentProcessId() );
+			m_tmpDir = kiPath( kiPath::Tmp );
+			m_tmpDir += nm;
+		}
 		m_tmpDir.beBackSlash( true );
 		m_tmpDir.mkdir();
 		m_tmpID = ::GetCurrentProcessId();
 	}
 
-	::GetTempFileName( m_tmpDir, "noa", m_tmpID++, buf );
+	//-- ここも 失敗を 見ない と buf が 壊れた パスになる
+	if( !::GetTempFileName( m_tmpDir, "noa", m_tmpID++, buf ) )
+	{
+		NOAHTRACE( "[tmp] GetTempFileName failed in \"%s\" err=%lu",
+			(const char*)m_tmpDir, (unsigned long)::GetLastError() );
+		tmp = "";
+		return;
+	}
 	::DeleteFile( buf );
 	tmp = buf;
 	tmp.beBackSlash( true );
