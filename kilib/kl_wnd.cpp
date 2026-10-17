@@ -114,6 +114,29 @@ void kiWindow::setFront( HWND wnd )
 	// Special Thanks To kazubon !! ( the author of TClock )
 }
 
+kiWindow::WaitCursor::WaitCursor( HWND wnd )
+	: m_hWnd(wnd), m_hPrev(NULL), m_hWait(NULL)
+{
+	if( !m_hWnd )
+		return;
+
+	// shared system cursor: must NOT be destroyed
+	m_hWait = ::LoadCursor( NULL, IDC_WAIT );
+	if( !m_hWait )
+		return;
+
+	m_hPrev = (HCURSOR)::SetClassLong( m_hWnd, GCL_HCURSOR, (LONG)m_hWait );
+	::SetCursor( m_hWait );
+}
+
+kiWindow::WaitCursor::~WaitCursor()
+{
+	if( !m_hWnd || !m_hWait )
+		return;
+	::SetClassLong( m_hWnd, GCL_HCURSOR, (LONG)m_hPrev );
+	::SetCursor( m_hPrev ? m_hPrev : ::LoadCursor( NULL, IDC_ARROW ) );
+}
+
 void kiWindow::setCenter( HWND wnd, HWND rel )
 {
 	RECT rc,pr;

@@ -61,6 +61,21 @@ public: //-- 外向きインターフェイス --------------------------
 	static void setFront( HWND wnd );
 
 	// [static] Windowを中央へ
+	//-- Cursor swap: hourglass in the ctor, previous cursor back in the dtor.
+	//   SetCursor alone is undone the moment the mouse moves, so the window
+	//   CLASS cursor has to be replaced as well.
+	class WaitCursor
+		{
+	public:
+		WaitCursor( HWND wnd );
+		~WaitCursor();
+
+	private:
+		HWND    m_hWnd;
+		HCURSOR m_hPrev;
+		HCURSOR m_hWait;
+		};
+
 	static void setCenter( HWND wnd, HWND rel=NULL );
 
 	// [static] HWND -> kiWindow ( もしあれば )

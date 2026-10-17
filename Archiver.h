@@ -119,7 +119,13 @@ inline int CArchiver::melt( const arcname& aname, const kiPath& ddir, const aflA
 {
 	if( not_loaded )
 		m_Able=v_load(), not_loaded=false;
-	return (m_Able&aMelt)?v_melt(aname,ddir,files):0xffff;
+	if( !(m_Able&aMelt) )
+		return 0xffff;
+
+	//-- Extraction blocks for a long time, and the progress window comes from
+	//   the archiver DLL, so swap the cursor on the main window.
+	kiWindow::WaitCursor cur( app()->mainhwnd() );
+	return v_melt(aname,ddir,files);
 }
 
 inline bool CArchiver::list( const arcname& aname, aflArray& files )
@@ -133,7 +139,12 @@ inline int CArchiver::compress( const kiPath& base, const wfdArray& files, const
 {
 	if( not_loaded )
 		m_Able=v_load(), not_loaded=false;
-	return (m_Able&aCompress)?v_compress(base,files,ddir,method,sfx):0xffff;
+	if( !(m_Able&aCompress) )
+		return 0xffff;
+
+	//-- compression blocks just as long
+	kiWindow::WaitCursor cur( app()->mainhwnd() );
+	return v_compress(base,files,ddir,method,sfx);
 }
 
 inline bool CArchiver::ver( kiStr& str )
