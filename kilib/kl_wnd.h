@@ -62,8 +62,11 @@ public: //-- 外向きインターフェイス --------------------------
 
 	// [static] Windowを中央へ
 	//-- Cursor swap: hourglass in the ctor, previous cursor back in the dtor.
-	//   SetCursor alone is undone the moment the mouse moves, so the window
-	//   CLASS cursor has to be replaced as well.
+	//   SetCursor alone is undone the moment the mouse moves, so where it is
+	//   safe the window CLASS cursor is replaced too. It is NOT safe on a
+	//   dialog: every dialog in the process shares the #32770 class, so that
+	//   would hand the hourglass to modal dialogs raised by an archiver DLL.
+	//   On a dialog this degrades to plain SetCursor.
 	class WaitCursor
 		{
 	public:

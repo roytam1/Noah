@@ -125,6 +125,17 @@ kiWindow::WaitCursor::WaitCursor( HWND wnd )
 	if( !m_hWait )
 		return;
 
+	//-- ダイアログは プロセス全体で 同じクラス (#32770) を 共有している。
+	//    (-> klassen の カーソルを 替えると、アーカイブDLLの ダイアログ にも
+	//    適用 されて 応答不能 に 見える )
+	//   ので ダイアログ に 対しては SetCursor だけにする。
+	if( (LONG)::GetClassLong( m_hWnd, GCL_WNDPROC )==(LONG)::DefDlgProcA )
+	{
+		NOAHTRACE( "[cursor] target is a dialog, SetCursor only" );
+		::SetCursor( m_hWait );
+		return;
+	}
+
 	m_hPrev = (HCURSOR)::SetClassLong( m_hWnd, GCL_HCURSOR, (LONG)m_hWait );
 	::SetCursor( m_hWait );
 }
@@ -133,8 +144,15 @@ kiWindow::WaitCursor::~WaitCursor()
 {
 	if( !m_hWnd || !m_hWait )
 		return;
-	::SetClassLong( m_hWnd, GCL_HCURSOR, (LONG)m_hPrev );
-	::SetCursor( m_hPrev ? m_hPrev : ::LoadCursor( NULL, IDC_ARROW ) );
+
+	// ダイアログ は クラスを 触っていない
+	if( m_hPrev )
+	{
+		::SetClassLong( m_hWnd, GCL_HCURSOR, (LONG)m_hPrev );
+		::SetCursor( m_hPrev );
+	}
+	else
+		::SetCursor( ::LoadCursor( NULL, IDC_ARROW ) );
 }
 
 void kiWindow::setCenter( HWND wnd, HWND rel )
