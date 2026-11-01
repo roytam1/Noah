@@ -18,3 +18,5 @@ Debug/
 *.lib
 bin-msvc4/
 bin-msvc4-trace/
+bin-win64/
+bin-win64-trace/

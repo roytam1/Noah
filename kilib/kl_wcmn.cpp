@@ -104,7 +104,7 @@ static void folderDlgFill( HWND dlg, const char* cur )
 // 選択項目へ 一つ階層 降りる。".." なら 上へ 上がる
 static void folderDlgEnter( HWND dlg )
 {
-	FOLDERDLG* fd = (FOLDERDLG*)::GetWindowLong( dlg, GWL_USERDATA );
+	FOLDERDLG* fd = (FOLDERDLG*)ki_get_userdata( dlg );
 	if( !fd )
 		return;
 
@@ -136,14 +136,14 @@ static void folderDlgEnter( HWND dlg )
 	folderDlgFill( dlg, fd->cur );
 }
 
-static BOOL CALLBACK folderDlgProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
+static KI_DLGRET CALLBACK folderDlgProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 {
 	switch( msg )
 	{
 	case WM_INITDIALOG:
 		{
 			FOLDERDLG* fd = (FOLDERDLG*)lp;
-			::SetWindowLong( dlg, GWL_USERDATA, (LONG)fd );
+			ki_set_userdata( dlg, fd );
 
 			// 初期位置。存在しない なら Windows ディレクトリ から やり直す
 			char old[MAX_PATH];
@@ -180,7 +180,7 @@ static BOOL CALLBACK folderDlgProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 				if( i!=CB_ERR )
 				{
 					::SendMessage( cb, CB_GETLBTEXT, (WPARAM)i, (LPARAM)root );
-					FOLDERDLG* fd = (FOLDERDLG*)::GetWindowLong( dlg, GWL_USERDATA );
+					FOLDERDLG* fd = (FOLDERDLG*)ki_get_userdata( dlg );
 					if( fd && ::SetCurrentDirectory( root ) )
 					{
 						char np[MAX_PATH];
@@ -204,7 +204,7 @@ static BOOL CALLBACK folderDlgProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 
 		case IDOK:
 			{
-				FOLDERDLG* fd = (FOLDERDLG*)::GetWindowLong( dlg, GWL_USERDATA );
+				FOLDERDLG* fd = (FOLDERDLG*)ki_get_userdata( dlg );
 				if( fd )
 					fd->out = fd->cur;
 				::EndDialog( dlg, IDOK );
@@ -251,7 +251,7 @@ bool kiSUtil::getFolderDlg( char* buf, HWND par, const char* title, const char* 
 	bi.lpszTitle      = title;
 	bi.ulFlags        = BIF_RETURNONLYFSDIRS | BIF_DONTGOBELOWDOMAIN;
 	bi.lpfn           = __ki__ofp;
-	bi.lParam         = (long)def;
+	bi.lParam         = (LPARAM)def;
 
 	// ダイアログ表示
 	ITEMIDLIST* id = ::SHBrowseForFolder( &bi );

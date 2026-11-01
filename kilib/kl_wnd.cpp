@@ -39,11 +39,11 @@ LRESULT CALLBACK kiWindow::CBTProc( int code, WPARAM wp, LPARAM lp )
 		{
 			// k.i.lib のウインドウが CreateWindow された場合
 			st_pCurInit->setHwnd( (HWND)wp );
-			::SetWindowLong( (HWND)wp, GWL_USERDATA, (LONG)st_pCurInit );
+			ki_set_userdata( (HWND)wp, st_pCurInit );
 			st_pCurInit = NULL;
 		}
 		else
-			::SetWindowLong( (HWND)wp, GWL_USERDATA, 0 );
+			ki_set_userdata( (HWND)wp, NULL );
 	}
 
 	return ::CallNextHookEx( st_hHook, code, wp, lp );
@@ -51,7 +51,7 @@ LRESULT CALLBACK kiWindow::CBTProc( int code, WPARAM wp, LPARAM lp )
 
 void kiWindow::detachHwnd()
 {
-	::SetWindowLong( hwnd(), GWL_USERDATA, 0 );
+	ki_set_userdata( hwnd(), NULL );
 	if( this == app()->mainwnd() )
 		app()->setMainWnd( NULL );
 	setHwnd( NULL );
@@ -129,14 +129,14 @@ kiWindow::WaitCursor::WaitCursor( HWND wnd )
 	//    (-> klassen の カーソルを 替えると、アーカイブDLLの ダイアログ にも
 	//    適用 されて 応答不能 に 見える )
 	//   ので ダイアログ に 対しては SetCursor だけにする。
-	if( (LONG)::GetClassLong( m_hWnd, GCL_WNDPROC )==(LONG)::DefDlgProcA )
+	if( ki_get_class_wndproc( m_hWnd )==(WNDPROC)::DefDlgProcA )
 	{
 		NOAHTRACE( "[cursor] target is a dialog, SetCursor only" );
 		::SetCursor( m_hWait );
 		return;
 	}
 
-	m_hPrev = (HCURSOR)::SetClassLong( m_hWnd, GCL_HCURSOR, (LONG)m_hWait );
+	m_hPrev = ki_set_class_cursor( m_hWnd, m_hWait );
 	::SetCursor( m_hWait );
 }
 
@@ -148,7 +148,7 @@ kiWindow::WaitCursor::~WaitCursor()
 	// ダイアログ は クラスを 触っていない
 	if( m_hPrev )
 	{
-		::SetClassLong( m_hWnd, GCL_HCURSOR, (LONG)m_hPrev );
+		ki_set_class_cursor( m_hWnd, m_hPrev );
 		::SetCursor( m_hPrev );
 	}
 	else
@@ -186,7 +186,7 @@ kiWindow::~kiWindow()
 {
 	if( m_hWnd && ::IsWindow( m_hWnd ) )
 	{
-		::SetWindowLong( m_hWnd, GWL_USERDATA, 0 );
+		ki_set_userdata( m_hWnd, NULL );
 		::DestroyWindow( m_hWnd );
 	}
 }
@@ -240,10 +240,10 @@ void kiDialog::end( UINT endcode )
 		::DestroyWindow( hwnd() );
 }
 
-BOOL kiDialog::commonDlg( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
+KI_DLGRET kiDialog::commonDlg( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 {
 	// kiDialog インターフェイスへのポインタを取得
-	kiDialog* ptr = (kiDialog*)::GetWindowLong( dlg, GWL_USERDATA );
+	kiDialog* ptr = (kiDialog*)ki_get_userdata( dlg );
 	if( !ptr ) return FALSE;
 
 	// WM_INITDIALOG なら onInit を呼ぶ
@@ -342,7 +342,7 @@ void kiPropSheet::end( UINT endcode )
 	setEndCode( endcode );
 
 	// サブクラス化解除
-	::SetWindowLong( hwnd(), GWL_WNDPROC, (LONG)m_DefProc );
+	ki_set_wndproc( hwnd(), m_DefProc );
 
 	// 終了
 	if( isModal() ) // サブクラス化解除してるので、再度 end が呼ばれることはないはず。
@@ -356,7 +356,7 @@ void kiPropSheet::end( UINT endcode )
 
 LRESULT CALLBACK kiPropSheet::main_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 {
-	kiPropSheet* ptr = (kiPropSheet*)::GetWindowLong( dlg, GWL_USERDATA );
+	kiPropSheet* ptr = (kiPropSheet*)ki_get_userdata( dlg );
 	if( !ptr )
 		return 0;
 
@@ -443,15 +443,15 @@ int CALLBACK kiPropSheet::main_initProc( HWND dlg, UINT msg, LPARAM lp )
 		setFront( dlg );
 
 		//サブクラス化する
-		st_CurInitPS->m_DefProc = (WNDPROC)::SetWindowLong( dlg, GWL_WNDPROC, (LONG)main_cmmnProc );
+		st_CurInitPS->m_DefProc = ki_set_wndproc( dlg, main_cmmnProc );
 		st_CurInitPS->onInit();
 	}
 	return 0;
 }
 
-BOOL kiPropSheet::page_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
+KI_DLGRET kiPropSheet::page_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
 {
-	kiPropSheetPage* ptr = (kiPropSheetPage*)::GetWindowLong( dlg, GWL_USERDATA );
+	kiPropSheetPage* ptr = (kiPropSheetPage*)ki_get_userdata( dlg );
 	// Only the messages that decide whether the page came up at all; logging
 	// every one would produce a log large enough to matter on a 16MB box.
 	if( msg==WM_INITDIALOG || msg==WM_DESTROY )

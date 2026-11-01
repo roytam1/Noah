@@ -4,6 +4,28 @@
 #ifndef AFX_KIWINDOW_H__26105B94_1E36_42FA_8916_C2F7FB9EF994__INCLUDED_
 #define AFX_KIWINDOW_H__26105B94_1E36_42FA_8916_C2F7FB9EF994__INCLUDED_
 
+//-- Win64: Get/SetWindowLong only carry a LONG, so a pointer kept in a window
+//   (or in its class) is truncated. Use the *Ptr forms there; the 32bit build
+//   keeps the original calls, so behaviour and the old toolchains are unchanged.
+//   KI_DLGRET is what a DLGPROC must return: BOOL on Win32, INT_PTR on Win64.
+#ifdef _WIN64
+#define ki_get_userdata(h)       ((void*)::GetWindowLongPtr((h), GWLP_USERDATA))
+#define ki_set_userdata(h,p)     ::SetWindowLongPtr((h), GWLP_USERDATA, (LONG_PTR)(p))
+#define ki_get_wndproc(h)        ((WNDPROC)::GetWindowLongPtr((h), GWLP_WNDPROC))
+#define ki_set_wndproc(h,p)      ((WNDPROC)::SetWindowLongPtr((h), GWLP_WNDPROC, (LONG_PTR)(p)))
+#define ki_get_class_wndproc(h)  ((WNDPROC)::GetClassLongPtr((h), GCLP_WNDPROC))
+#define ki_set_class_cursor(h,c) ((HCURSOR)::SetClassLongPtr((h), GCLP_HCURSOR, (LONG_PTR)(c)))
+#define KI_DLGRET                INT_PTR
+#else
+#define ki_get_userdata(h)       ((void*)::GetWindowLong((h), GWL_USERDATA))
+#define ki_set_userdata(h,p)     ::SetWindowLong((h), GWL_USERDATA, (LONG)(p))
+#define ki_get_wndproc(h)        ((WNDPROC)::GetWindowLong((h), GWL_WNDPROC))
+#define ki_set_wndproc(h,p)      ((WNDPROC)::SetWindowLong((h), GWL_WNDPROC, (LONG)(p)))
+#define ki_get_class_wndproc(h)  ((WNDPROC)::GetClassLong((h), GCL_WNDPROC))
+#define ki_set_class_cursor(h,c) ((HCURSOR)::SetClassLong((h), GCL_HCURSOR, (LONG)(c)))
+#define KI_DLGRET                BOOL
+#endif
+
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
 // kiWindow : Windowの簡単な管理
 
@@ -84,7 +106,7 @@ public: //-- 外向きインターフェイス --------------------------
 	// [static] HWND -> kiWindow ( もしあれば )
 	static kiWindow* kiwnd( HWND wnd )
 		{
-			kiWindow* ptr = (kiWindow*)::GetWindowLong( wnd, GWL_USERDATA );
+			kiWindow* ptr = (kiWindow*)ki_get_userdata( wnd );
 			if( !ptr ) return NULL;
 			if( ::IsBadCodePtr((FARPROC)&ptr) ) return NULL;
 			return ptr;
@@ -210,7 +232,7 @@ private: //-- 内部処理 -------------------------------------
 		{
 			return (!!::IsDialogMessage( hwnd(), msg ));
 		}
-	static BOOL CALLBACK commonDlg( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
+	static KI_DLGRET CALLBACK commonDlg( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
 };
 
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
@@ -299,7 +321,7 @@ private: //-- 内部処理 ---------------------------------------
 		{ return !!PropSheet_IsDialogMessage( hwnd(),msg ); }
 	static int CALLBACK main_initProc( HWND dlg, UINT msg, LPARAM lp );
 	static LRESULT CALLBACK main_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
-	static BOOL CALLBACK page_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
+	static KI_DLGRET CALLBACK page_cmmnProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
 	static UINT CALLBACK page_initProc( HWND dlg, UINT msg, LPPROPSHEETPAGE ppsp );
 
 protected:

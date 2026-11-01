@@ -77,6 +77,16 @@ static const char* ProgID_NoahXt = "NoahXt";
 
 
 
+//-- Win64: the shell interfaces widen these to pointer-sized types. The 32bit
+//   declaration is kept for the old toolchains that lack UINT_PTR.
+#ifdef _WIN64
+typedef UINT_PTR          ki_cmdid_t;
+typedef LPCITEMIDLIST     ki_pidl_t;
+#else
+typedef UINT              ki_cmdid_t;
+typedef const ITEMIDLIST* ki_pidl_t;
+#endif
+
 class noahXt : public IContextMenu, IShellExtInit
 {
 public:
@@ -99,7 +109,7 @@ public:
 			}
 			return NOERROR;
 		}
-	STDMETHODIMP Initialize( const ITEMIDLIST* pF, IDataObject* pD, HKEY )
+	STDMETHODIMP Initialize( ki_pidl_t pF, IDataObject* pD, HKEY )
 		{
 			::SHGetPathFromIDList( pF, m_szDir );
 			if( m_pDataObj )m_pDataObj->Release();
@@ -140,7 +150,7 @@ public:
 			return E_INVALIDARG;
 		}
 	// ヘルプ文字列など
-	STDMETHODIMP GetCommandString( UINT cmd, UINT flag, UINT*, LPSTR pszName, UINT cchMax )
+	STDMETHODIMP GetCommandString( ki_cmdid_t cmd, UINT flag, UINT*, LPSTR pszName, UINT cchMax )
 		{
 			cmd = filter_cmd( cmd );
 			if( cmd==2 )
@@ -154,7 +164,7 @@ public:
 		}
 private:
 	// コマンドIDを compress=0, melt=1, else=2 にフィルタリング
-	UINT filter_cmd( UINT i )
+	ki_cmdid_t filter_cmd( ki_cmdid_t i )
 		{
 			if( m_bCMP )if( m_bEXT )return (i<=1 ? i : 2);
 						else		return (i==0 ? 0 : 2);

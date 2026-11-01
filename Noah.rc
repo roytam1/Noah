@@ -412,7 +412,11 @@ END
 // 24
 //
 
+#ifdef WIN64
+1                       24      MOVEABLE PURE   "manifest64.xml"
+#else
 1                       24      MOVEABLE PURE   "manifest.xml"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //

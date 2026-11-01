@@ -108,6 +108,38 @@ toolbar, command-line or `WinExec` entry instead of OLE drop, `WritePrivateProfi
 instead of the registry), not a build-flag change. The compression/extraction engine survives;
 almost none of the front-end does. Treat it as out of scope unless someone asks for it.
 
+### MSVC x64 (`msvc64.mak`)
+
+- `NMAKE /f msvc64.mak` builds `bin-win64\{Noah.exe,NoahXt.dll,uninst.exe}`; objects go to
+  `tmp\win64\`. Same local-drive-only rule as `msvc4.mak` (`pushd` the UNC path first).
+- Use the "03sp1" tools that sit beside the default Win64 set:
+
+  ```
+  set PATH=C:\AMD64sdk\Bin\Win64-03sp1;%PATH%
+  set INCLUDE=C:\AMD64sdk\Include;C:\AMD64sdk\Include\crt
+  set LIB=C:\AMD64sdk\Lib\Win64-03sp1;C:\AMD64sdk\Lib\Win64
+  ```
+
+  `VCVARS_AMD64.BAT` alone is not enough: its `Bin\Win64\cl.exe` cannot load `c1.dll`
+  (`msvcp70.dll` is not installed), and its `Lib\Win64` CRT has no `operator new` and keeps
+  `_amsg_exit` inside `wwincrt0.obj`, so `/entry:kilib_startUp` still drags in `wWinMain`.
+  With the 03sp1 set the entry point links unchanged. That CRT is built with `/GS`, so
+  `bufferoverflowu.lib` is linked; pass `SECLIB=` for a toolchain whose CRT carries
+  `__security_cookie` itself.
+- Every x64-only source difference is behind `#ifdef _WIN64`, so the Win32 builds are
+  unchanged: `ki_get_userdata` / `ki_set_userdata` / `ki_get_wndproc` / `ki_set_wndproc` /
+  `ki_get_class_wndproc` / `ki_set_class_cursor` and `KI_DLGRET` in `kilib/kl_wnd.h`
+  (`GetWindowLongPtr` and `INT_PTR` instead of `GetWindowLong` / `BOOL`), `ki_pidl_t` /
+  `ki_cmdid_t` in `NoahXt/NoahXt.cpp`, `KI_DLL_7ZIP` in `ArcDLL.h`, and `manifest64.xml`
+  (embedded as `RT_MANIFEST` when `rc /d WIN64` runs -- its `processorArchitecture` must
+  match the image, or the loader fails with `0xC000007B` before any code runs).
+- A 64-bit Noah only gets formats whose backend exists in 64-bit: the built-in MS-Compress
+  and CompactPro, whatever `.b2e` scripts run, plus any 64-bit `*.dll` dropped next to
+  `Noah.exe`. `7-zip64.dll` (a 64-bit build of the 7-zip32 interface) and a ported
+  `XacRett.dll` are the intended ones; `kiArcDLLRaw` only needs the `Command` export, so
+  nothing else changes. The rest (`Unlha32`, `Unrar32`, ...) are 32-bit only and are simply
+  reported as unavailable.
+
 ### Linker / startup quirks — do not "fix" these
 
 - Entry point is **`kilib_startUp`** (`Noah.vcxproj` `<EntryPointSymbol>`, `.dsp`

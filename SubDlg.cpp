@@ -141,7 +141,7 @@ BOOL CArcViewDlg::onInit()
 		(int)(filesize_arc*100 / filesize_sum),
 		(const char*)m_pArc->arctype_name(full_filename)
 	);
-	sendMsgToItem( IDC_STATUSBAR, WM_SETTEXT, 0, (long)tmp );
+	sendMsgToItem( IDC_STATUSBAR, WM_SETTEXT, 0, (LPARAM)tmp );
 
 	if( !m_bAble )
 	{

@@ -2,6 +2,12 @@
 #define AFX_ARCDLL_H__911C109D_A40E_4722_A6F7_E3ACB8C2D2E3__INCLUDED_
 
 #include "Archiver.h"
+//-- 7-Zip ÇÃ DLL ñºÅB 64bit î≈ÇÕ API Ç™ìØÇ∂Ç≈ ñºëOÇæÇØ 7-zip64.dll Ç…Ç»ÇÈÅB
+#ifdef _WIN64
+#define KI_DLL_7ZIP "7-zip64.dll"
+#else
+#define KI_DLL_7ZIP "7-zip32.dll"
+#endif
 
 class CArcDLL : public CArchiver
 {
@@ -272,7 +278,7 @@ class CArc7z : public CArcDLL_DotSlash
 {
 public:
 	CArc7z() : CArcDLL_DotSlash(
-		"7-zip32.dll",
+		KI_DLL_7ZIP,
 		"7z.zip.jar.",
 		"x --",
 		"x -y -hide --",
@@ -293,7 +299,7 @@ class CArc7zZip : public CArcDLL_DotSlash
 {
 public:
 	CArc7zZip() : CArcDLL_DotSlash(
-		"7-zip32.dll",
+		KI_DLL_7ZIP,
 		"",NULL,NULL,1,"" ) {}
 private:
 	DWORD set_cmpr_mhd();
