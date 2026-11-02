@@ -5,8 +5,10 @@
 //-- 7-Zip ÇÃ DLL ñºÅB 64bit î≈ÇÕ API Ç™ìØÇ∂Ç≈ ñºëOÇæÇØ 7-zip64.dll Ç…Ç»ÇÈÅB
 #ifdef _WIN64
 #define KI_DLL_7ZIP "7-zip64.dll"
+#define KI_DLL_TAR  "tar64.dll"
 #else
 #define KI_DLL_7ZIP "7-zip32.dll"
+#define KI_DLL_TAR  "tar32.dll"
 #endif
 
 class CArcDLL : public CArchiver
@@ -165,7 +167,7 @@ class CArcTar : public CArcDLL_DotSlash
 {
 public:
 	CArcTar() : CArcDLL_DotSlash(
-		"Tar32.dll",
+		KI_DLL_TAR,
 		"tar.tgz.tbz.gz.bz2.z.taz.rpm.deb.ar.xz.lzma.",
 		"-xvf",
 		"--check-all-path=1 --display-dialog=0 -xvf",
