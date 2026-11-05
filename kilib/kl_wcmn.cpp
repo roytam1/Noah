@@ -282,7 +282,8 @@ void kiSUtil::getFolderDlgOfEditBox( HWND wnd, HWND par, const char* title )
 {
 	char str[MAX_PATH];
 	::SendMessage( wnd, WM_GETTEXT, MAX_PATH, (LPARAM)str );
-	for( char* x=str,*l=str; *x; x=kiStr::next(x) )
+	char* x=str,*l=str;
+	for( ; *x; x=kiStr::next(x) )
 		l=x;
 	if( *l=='\\' || *l=='/' )
 		*l='\0';

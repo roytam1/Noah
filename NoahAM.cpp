@@ -52,7 +52,8 @@ void CNoahArchiverManager::init()
 	kiFindFile find;
 	find.begin( "*.b2e" );
 	WIN32_FIND_DATA fd;
-	for( int t=0; find.next(&fd); t++ )
+	int t=0;
+	for( ; find.next(&fd); t++ )
 		m_AList.add( new CArcB2e(fd.cFileName) );
 	m_b2e = (t>1);
 	NOAHTRACE( "[arc.init] b2e scan done, %d found", t );
@@ -87,7 +88,8 @@ unsigned long CNoahArchiverManager::set_files( const cCharArray& files )
 	//-- 短いファイル名と長いのを両方取得しておく
 	m_FName.alloc( files.len() );
 	m_BasePathList.alloc( files.len() );
-	for( unsigned int i=0,c=0; i!=files.len(); i++ )
+	unsigned int i=0,c=0;
+	for( ; i!=files.len(); i++ )
 		if( kiFindFile::findfirst( files[i], &m_FName[c] ) )
 		{
 			if( m_FName[c].cAlternateFileName[0] == '\0' )
@@ -133,7 +135,8 @@ bool CNoahArchiverManager::map_melters( int mode ) // 1:cmp 2:mlt 3:must_mlt
 
 	kiPath fnm;
 	const char* ext;
-	for( unsigned int ct=0, bad=0; ct!=file_num(); ct++ )
+	unsigned int ct=0, bad=0;
+	for( ; ct!=file_num(); ct++ )
 	{
 //		fnm = m_BasePath, fnm += sname;
 		fnm = m_BasePathList[ct], fnm += sname;
@@ -301,7 +304,8 @@ void CNoahArchiverManager::do_listing( kiPath& destdir )
 	CArcViewDlg::clear();
 
 	//-- ダイアログ起動
-	for( unsigned int i=0; i!=m_FName.len(); i++ )
+	unsigned int i=0;
+	for( ; i!=m_FName.len(); i++ )
 	{
 		if( !m_Melters[i] )
 			continue;

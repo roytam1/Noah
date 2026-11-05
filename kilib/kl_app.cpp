@@ -78,6 +78,12 @@ void main()
 	// main がないと何故か libc.lib がリンクエラーになるのでダミー
 }
 
+// we set /entry:kilib_startUp so this stub is just to please CRT
+int APIENTRY wWinMain( HINSTANCE, HINSTANCE, wchar_t*, int )
+{
+	return 0;
+}
+
 #endif
 
 //--------------------------------------------------------------//

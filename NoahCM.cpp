@@ -289,7 +289,8 @@ void CNoahConfigDialog::onDrop( HDROP hdrop )
 	cCharArray dummy;
 
 	unsigned long max = ::DragQueryFile( hdrop, 0xffffffff, NULL, 0 );
-	for( unsigned int i=0; i!=max; i++ )
+	unsigned int i=0;
+	for( ; i!=max; i++ )
 	{
 		::DragQueryFile( hdrop, i, str, MAX_PATH );
 		reallist.add( kiStr(str) );
@@ -656,7 +657,8 @@ BOOL CNoahConfigDialog::CAssPage::onInit()
 		*first_dot = '\0';
 
 		// Šî–{Œ`Ž®‚È‚ç‚±‚±‚Å‚Í‚Ë‚é
-		for( int i=0; i<sizeof(ext_list)/sizeof(const char*); i++ )
+		int i=0;
+		for( ; i<sizeof(ext_list)/sizeof(const char*); i++ )
 			if( 0==ki_strcmp( ext_list[i], fd.cFileName ) )
 				break;
 		if( i != sizeof(ext_list)/sizeof(const char*) )

@@ -23,7 +23,8 @@ kiVar& kiVar::quote()
 {
 	if( m_pBuf[0]=='\"' )
 		return *this;
-	for( const char* p=m_pBuf; *p; p=next(p) )
+	const char* p=m_pBuf;
+	for( ; *p; p=next(p) )
 		if( *p==' ' )
 			break;
 	if( !(*p) )
@@ -47,7 +48,8 @@ kiVar& kiVar::unquote()
 {
 	if( *m_pBuf!='\"' )
 		return *this;
-	for( const char *last=m_pBuf+1,*p=m_pBuf+1; *p; p=next(p) )
+	const char *last=m_pBuf+1,*p=m_pBuf+1;
+	for( ; *p; p=next(p) )
 		last=p;
 	if( *last!='\"' )
 		return *this;

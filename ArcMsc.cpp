@@ -35,7 +35,8 @@ void CArcMsc::filename( char* oname, const char* ol, char ext )
 
 	// ç≈å„Ç™ '_' Ç»ÇÁè¡ÇµÇƒÇ®Ç≠ÅB
 	bool bIs_=false;
-	for( char* p=oname; *p; p=kiStr::next(p) ) 
+	char* p=oname;
+	for( ; *p; p=kiStr::next(p) ) 
 		bIs_ = (*p=='_');
 	if( bIs_ )
 		*(--p)='\0';
@@ -168,7 +169,8 @@ int CArcMsc::v_compress( const kiPath& base, const wfdArray& files, const kiPath
 
 	char aname[MAX_PATH];
 	ki_strcpy( aname, files[0].cFileName );
-	for( char *x=aname, *last=aname; *x; x=kiStr::next(x) )
+	char *x=aname, *last=aname;
+	for( ; *x; x=kiStr::next(x) )
 		last = x;
 	if( !IsDBCSLeadByte(*last) )
 		h_Ext3=*last;

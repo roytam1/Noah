@@ -81,11 +81,10 @@ static const char* ProgID_NoahXt = "NoahXt";
 //   declaration is kept for the old toolchains that lack UINT_PTR.
 #ifdef _WIN64
 typedef UINT_PTR          ki_cmdid_t;
-typedef LPCITEMIDLIST     ki_pidl_t;
 #else
 typedef UINT              ki_cmdid_t;
-typedef const ITEMIDLIST* ki_pidl_t;
 #endif
+typedef LPCITEMIDLIST     ki_pidl_t;
 
 class noahXt : public IContextMenu, IShellExtInit
 {
@@ -258,7 +257,8 @@ DllMain( HINSTANCE inst, DWORD why, LPVOID reserved )
 	{
 		::GetModuleFileName( inst, g_szDLL, sizeof(g_szDLL) );
 		::lstrcpy( g_szNoah, g_szDLL );
-		for( char *p=g_szNoah,*y=g_szNoah-1; *p; p=::CharNext(p) )
+		char *p=g_szNoah,*y=g_szNoah-1;
+		for( ; *p; p=::CharNext(p) )
 			if( *p=='\\' )
 				y=p;
 		::lstrcpy( y+1, "Noah.exe" );

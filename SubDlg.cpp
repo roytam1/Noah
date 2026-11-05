@@ -436,7 +436,8 @@ BOOL CALLBACK CArcViewDlg::proc( UINT msg, WPARAM wp, LPARAM lp )
 int CArcViewDlg::hlp_cnt_check()
 {
 	// 一個目の選択済みファイルが .hlp か否か
-	for( unsigned i=0; i!=m_files.len(); i++ )
+	unsigned i=0;
+	for( ; i!=m_files.len(); i++ )
 		if( m_files[i].selected )
 			break;
 	if( i==m_files.len() )

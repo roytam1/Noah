@@ -191,7 +191,8 @@ int CArcModule::cnt( const kiPath& aname, kiPath& dname, const char* wild )
 			INDIVIDUALINFO inf1st, inf;
 			if( 0==m_dll->findfirst( h, wild, &inf1st ) )
 			{
-				for( const char* y=inf1st.szFileName; *y && *y!='\\' && *y!='/'; y=kiPath::next(y) );
+				const char* y=inf1st.szFileName;
+				for( ; *y && *y!='\\' && *y!='/'; y=kiPath::next(y) );
 				if( y!=inf1st.szFileName )
 				{
 					if( 0!=m_dll->findnext( h, &inf ) )
@@ -417,7 +418,8 @@ bool CArchiver::GetVersionInfoStr( char* name, char* buf, size_t cbBuf )
 			if( ::VerQueryValue( vbuf, blockname, (void**)&inf, &cbInf )
 			 && cbInf < cbBuf-1 )
 			{
-				for( char* v=buf; *inf && cbInf; ++inf,--cbInf )
+				char* v=buf;
+				for( ; *inf && cbInf; ++inf,--cbInf )
 					if( *inf != ' ' )
 						*v++ = (*inf==',' ? '.' : *inf);
 				*v = '\0';

@@ -19,7 +19,8 @@ void getProgramFiles( kiPath* path )
 	char buf[MAX_PATH];
 	if( ::GetWindowsDirectory( buf, MAX_PATH ) )
 	{
-		for( char* p=buf; *p!='\\' && *p; p++ );
+		char* p=buf;
+		for( ; *p!='\\' && *p; p++ );
 		*p='\0';
 
 		*path= buf, *path += '\\', *path += "Program Files";

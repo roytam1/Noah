@@ -256,7 +256,8 @@ bool kiPath::beDirOnly()
 bool kiPath::isInSameDir(const char* q) const
 {
 	bool diff=false;
-	for( const char *p=m_pBuf; *p && *q; p=next(p), q=next(q) )
+	const char *p=m_pBuf;
+	for( ; *p && *q; p=next(p), q=next(q) )
 		if( *p != *q )
 			diff = true;
 		else if( diff && (*p=='\\' || *p=='/' || *q=='\\' || *q=='/') )
@@ -410,7 +411,8 @@ UINT kiPath::getDriveType() const
 
 bool kiPath::endwithyen( const char* str )
 {
-	for( const char *p=str,*last=str; *p; p=next(p) )
+	const char *p=str,*last=str;
+	for( ; *p; p=next(p) )
 		last=p;
 	return ( *last=='\\' || *last=='/' );
 }

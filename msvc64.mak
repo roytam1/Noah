@@ -44,9 +44,13 @@ LFLAGS  = /nologo /entry:kilib_startUp /subsystem:windows
 SECLIB  = bufferoverflowu.lib
 LIBS    = kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib \
           advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib \
-          odbc32.lib odbccp32.lib comctl32.lib lz32.lib version.lib $(SECLIB)
+          comctl32.lib lz32.lib version.lib $(SECLIB)
+!IFDEF OUTDIR
+OBJDIR  = tmp\$(OUTDIR)
+!ELSE
 OBJDIR  = tmp\win64
 OUTDIR  = bin-win64
+!ENDIF
 
 !IFDEF TRACE
 CFLAGS  = $(CFLAGS) /DNOAH_TRACE
